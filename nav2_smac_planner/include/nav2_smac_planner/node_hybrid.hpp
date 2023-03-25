@@ -31,6 +31,7 @@
 #include "nav2_smac_planner/types.hpp"
 #include "nav2_smac_planner/collision_checker.hpp"
 #include "nav2_smac_planner/costmap_downsampler.hpp"
+#include "nav2_smac_planner/planner_debug_utils.hpp"
 
 namespace nav2_smac_planner
 {
@@ -440,6 +441,8 @@ public:
 
   NodeHybrid * parent;
   Coordinates pose;
+  plannerDebugUtils *debug_utils;
+
 
   // Constants required across all nodes but don't want to allocate more than once
   static double travel_distance_cost;
@@ -453,6 +456,8 @@ public:
   // Dubin / Reeds-Shepp lookup and size for dereferencing
   static LookupTable dist_heuristic_lookup_table;
   static float size_lookup;
+  static int result_cnt;
+
 
 private:
   float _cell_cost;
@@ -460,6 +465,10 @@ private:
   unsigned int _index;
   bool _was_visited;
   unsigned int _motion_primitive_index;
+
+  // (TODO: remove later when done)
+
+
 };
 
 }  // namespace nav2_smac_planner

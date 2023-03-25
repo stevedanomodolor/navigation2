@@ -42,6 +42,8 @@ LookupTable NodeHybrid::dist_heuristic_lookup_table;
 nav2_costmap_2d::Costmap2D * NodeHybrid::sampled_costmap = nullptr;
 CostmapDownsampler NodeHybrid::downsampler;
 ObstacleHeuristicQueue NodeHybrid::obstacle_heuristic_queue;
+// TODO remove later 
+int NodeHybrid::result_cnt = 0;
 
 // Each of these tables are the projected motion models through
 // time and space applied to the search on the current node in
@@ -265,8 +267,10 @@ NodeHybrid::NodeHybrid(const unsigned int index)
   _accumulated_cost(std::numeric_limits<float>::max()),
   _index(index),
   _was_visited(false),
-  _motion_primitive_index(std::numeric_limits<unsigned int>::max())
+  _motion_primitive_index(std::numeric_limits<unsigned int>::max()),
+  debug_utils(nullptr)
 {
+ 
 }
 
 NodeHybrid::~NodeHybrid()
@@ -705,8 +709,27 @@ bool NodeHybrid::backtracePath(CoordinateVector & path)
 
   NodePtr current_node = this;
 
+  // Open stream
+  std::cout << "Opening stream" << std::endl;
+
+  if(debug_utils == nullptr)
+  {
+    debug_utils = new plannerDebugUtils();
+    debug_utils->set_file_name(result_cnt);
+  }
+  if(!debug_utils->open_stream())
+  {
+    std::cout << "Failed to open stream" << std::endl;
+  }
+    std::cout << "Opening stream" << std::endl;
+
+
   while (current_node->parent) {
     path.push_back(current_node->pose);
+    if(debug_utils->stream_is_open())
+    {
+      debug_utils->write_to_stream(current_node->pose.x, current_node->pose.y, current_node->pose.theta);
+    }
     // Convert angle to radians
     path.back().theta = NodeHybrid::motion_table.getAngleFromBin(path.back().theta);
     current_node = current_node->parent;
@@ -717,6 +740,11 @@ bool NodeHybrid::backtracePath(CoordinateVector & path)
   // Convert angle to radians
   path.back().theta = NodeHybrid::motion_table.getAngleFromBin(path.back().theta);
 
+  if(debug_utils->stream_is_open())
+  {
+    debug_utils->close_stream();
+    result_cnt++;
+  }
   return true;
 }
 
