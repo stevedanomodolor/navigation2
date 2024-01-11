@@ -126,19 +126,19 @@ void SmacPlannerLattice::configure(
   nav2_util::declare_parameter_if_not_declared(
     node, name + ".allow_reverse_expansion", rclcpp::ParameterValue(false));
   node->get_parameter(name + ".allow_reverse_expansion", _search_info.allow_reverse_expansion);
-
+  std::string goal_heading_type;
   nav2_util::declare_parameter_if_not_declared(
   node, name + ".goal_heading", rclcpp::ParameterValue("DEFAULT"));
-  node->get_parameter(name + ".goal_heading", _goal_heading_type);
+  node->get_parameter(name + ".goal_heading", goal_heading_type);
 
-  _goal_heading = fromStringToGH(_goal_heading_type);
+  _goal_heading = fromStringToGH(goal_heading_type);
   if(_goal_heading == GoalHeading::UNKNOWN)
   {
     RCLCPP_WARN(
       _logger,
       "Unable to get GoalHeader type. Given '%s', "
       "Valid options are DEFAULT, BIDIRECTIONAL, ANY_HEADING. ",
-      _goal_heading_type.c_str());
+      goal_heading_type.c_str());
   }
 
   _metadata = LatticeMotionTable::getLatticeMetadata(_search_info.lattice_filepath);
@@ -458,15 +458,15 @@ SmacPlannerLattice::dynamicParametersCallback(std::vector<rclcpp::Parameter> par
           _metadata.min_turning_radius / (_costmap->getResolution());
       }
       else if (name == _name + ".goal_heading") {
-        _goal_heading_type = parameter.as_string();
-        _goal_heading = fromStringToGH(_goal_heading_type);
+        std::string goal_heading_type = parameter.as_string();
+        _goal_heading = fromStringToGH(goal_heading_type);
         if(_goal_heading == GoalHeading::UNKNOWN)
         {
           RCLCPP_WARN(
             _logger,
             "Unable to get GoalHeader type. Given '%s', "
             "Valid options are DEFAULT, BIDIRECTIONAL, ANY_HEADING. ",
-            _goal_heading_type.c_str());
+            goal_heading_type.c_str());
         }
       }
         

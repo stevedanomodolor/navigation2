@@ -118,7 +118,6 @@ protected:
   double _lookup_table_size;
   double _minimum_turning_radius_global_coords;
   bool _debug_visualizations;
-  std::string _goal_heading_type;
   GoalHeading _goal_heading;
   std::string _motion_model_for_search;
   MotionModel _motion_model;

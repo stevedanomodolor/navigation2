@@ -202,29 +202,30 @@ void AStarAlgorithm<NodeT>::setGoal(
   _goals.clear();
   // _goals_coordinates.clear();
   std::vector<Coordinates> goal_coordinates;
-  unsigned int number_of_bins = NodeT::motion_table.getNumOfBins();
-  if(goal_heading == GoalHeading::DEFAULT){
+  unsigned int number_of_bins = NodeT::motion_table.num_angle_quantization;
+  switch (goal_heading)
+  {
+  case GoalHeading::DEFAULT:
     _goals.push_back(addToGraph(NodeT::getIndex(mx, my, dim_3)));
     goal_coordinates.push_back(typename NodeT::Coordinates(
-      static_cast<float>(mx),
-      static_cast<float>(my),
-      static_cast<float>(dim_3)));
-  }else if(goal_heading == GoalHeading::BIDIRECTIONAL)
-  {
+    static_cast<float>(mx),
+    static_cast<float>(my),
+    static_cast<float>(dim_3)));
+    break;
+  case GoalHeading::BIDIRECTIONAL:
     _goals.push_back(addToGraph(NodeT::getIndex(mx, my, dim_3)));
     // add angle -180
     _goals.push_back(addToGraph(NodeT::getIndex(mx, my, dim_3 + number_of_bins/2)));
     goal_coordinates.push_back(typename NodeT::Coordinates(
-      static_cast<float>(mx),
-      static_cast<float>(my),
-      static_cast<float>(dim_3)));
+    static_cast<float>(mx),
+    static_cast<float>(my),
+    static_cast<float>(dim_3)));
     goal_coordinates.push_back(typename NodeT::Coordinates(
-      static_cast<float>(mx),
-      static_cast<float>(my),
-      static_cast<float>(dim_3 + number_of_bins/2)));
-    
-  }else if (goal_heading == GoalHeading::ANY_HEADING)
-  {
+    static_cast<float>(mx),
+    static_cast<float>(my),
+    static_cast<float>(dim_3 + number_of_bins/2)));
+    break:
+  case GoalHeading::ANY_HEADING:
     for (unsigned int i = 0; i < number_of_bins; i++)
     {
       _goals.push_back(addToGraph(NodeT::getIndex(mx, my, i)));
@@ -233,31 +234,14 @@ void AStarAlgorithm<NodeT>::setGoal(
         static_cast<float>(my),
         static_cast<float>(i)));
     }
-  }
-  else
-  {
+    break;
+  
+  default:
     throw std::runtime_error("Goal Heading not supported");
+    break;
   }
 
-  auto has_goals_changed = [](const std::vector<Coordinates> & current_goal_coordinates,const std::vector<Coordinates> & previous_goal_coordinates) -> bool 
-  {
-    if(current_goal_coordinates.size() != previous_goal_coordinates.size())
-    {
-      return true;
-    }
-    else 
-    {
-      for(unsigned int i = 0; i < goal_coordinates.size() - 1; i++)
-    {
-      if(goal_coordinates[i] != goal_coordinates[i+1])
-      {
-        return true;
-      }
-    }
-    }    
-  }
-
-  if (!_search_info.cache_obstacle_heuristic || has_goals_changed(goal_coordinates)) {
+  if (!_search_info.cache_obstacle_heuristic || goal_coordinates !=_goals_coordinates) {
     if (!_start) {
       throw std::runtime_error("Start must be set before goal.");
     }

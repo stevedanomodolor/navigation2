@@ -82,8 +82,6 @@ inline std::string toString(const GoalHeading & n)
   }
 }
 
-// TODO(@stevedanomodolor) find a better way to do this
-
 inline GoalHeading fromStringToGH(const std::string & n)
 {
   if(n == "DEFAULT") {

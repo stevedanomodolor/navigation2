@@ -154,19 +154,19 @@ void SmacPlannerHybrid::configure(
   nav2_util::declare_parameter_if_not_declared(
     node, name + ".motion_model_for_search", rclcpp::ParameterValue(std::string("DUBIN")));
   node->get_parameter(name + ".motion_model_for_search", _motion_model_for_search);
-
+  std::string goal_heading_type;
   nav2_util::declare_parameter_if_not_declared(
   node, name + ".goal_heading", rclcpp::ParameterValue("DEFAULT"));
-  node->get_parameter(name + ".goal_heading", _goal_heading_type);
+  node->get_parameter(name + ".goal_heading", goal_heading_type);
 
-  _goal_heading = fromStringToGH(_goal_heading_type);
+  _goal_heading = fromStringToGH(goal_heading_type);
   if(_goal_heading == GoalHeading::UNKNOWN)
   {
     RCLCPP_WARN(
       _logger,
       "Unable to get GoalHeader type. Given '%s', "
       "Valid options are DEFAULT, BIDIRECTIONAL, ANY_HEADING. ",
-      _goal_heading_type.c_str());
+      goal_heading_type.c_str());
   }
   _motion_model = fromString(_motion_model_for_search);
   if (_motion_model == MotionModel::UNKNOWN) {
@@ -615,15 +615,15 @@ SmacPlannerHybrid::dynamicParametersCallback(std::vector<rclcpp::Parameter> para
             _motion_model_for_search.c_str());
         }
       }else if (name == _name + ".goal_heading") {
-        _goal_heading_type = parameter.as_string();
-        _goal_heading = fromStringToGH(_goal_heading_type);
+        std::string goal_heading_type = parameter.as_string();
+        _goal_heading = fromStringToGH(goal_heading_type);
         if(_goal_heading == GoalHeading::UNKNOWN)
         {
           RCLCPP_WARN(
             _logger,
             "Unable to get GoalHeader type. Given '%s', "
             "Valid options are DEFAULT, BIDIRECTIONAL, ANY_HEADING. ",
-            _goal_heading_type.c_str());
+            goal_heading_type.c_str());
         }
       }
     }
