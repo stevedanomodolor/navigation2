@@ -43,7 +43,7 @@ AStarAlgorithm<NodeT>::AStarAlgorithm(
   _search_info(search_info),
   _goal_coordinates(Coordinates()),
   _start(nullptr),
-  _goal(nullptr),
+  _goals(nullptr),
   _motion_model(motion_model)
 {
   _graph.reserve(100000);
@@ -186,8 +186,8 @@ void AStarAlgorithm<Node2D>::setGoal(
     throw std::runtime_error("Node type Node2D cannot be given non-zero goal dim 3.");
   }
 
-  _goal.clear();
-  _goal_coordinates.clear();
+  _goals.clear();
+  _goals_coordinates.clear();
   _goals.push_back(addToGraph(Node2D::getIndex(mx, my, getSizeX())));
   _goals_coordinates.push_back(Node2D::Coordinates(mx, my));
 }
@@ -224,7 +224,7 @@ void AStarAlgorithm<NodeT>::setGoal(
     static_cast<float>(mx),
     static_cast<float>(my),
     static_cast<float>(dim_3 + number_of_bins/2)));
-    break:
+    break;
   case GoalHeading::ANY_HEADING:
     for (unsigned int i = 0; i < number_of_bins; i++)
     {
@@ -266,7 +266,7 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
   }
 
   // Check if points were filled in
-  if (!_start || !_goal) {
+  if (!_start || !_goals) {
     throw std::runtime_error("Failed to compute path, no valid start or goal given.");
   }
 
@@ -355,14 +355,24 @@ bool AStarAlgorithm<NodeT>::createPath(
     // 2) Mark Nbest as visited
     current_node->visited();
 
-    // 2.1) Use an analytic expansion (if available) to generate a path
-    expansion_result = nullptr;
-    expansion_result = _expander->tryAnalyticExpansion(
-      current_node, getGoal(), neighborGetter, analytic_iterations, closest_distance);
-    if (expansion_result != nullptr) {
-      current_node = expansion_result;
+    // 2.1) Use an analytic expansion (if available) to generate a path to all the goals 
+    // and pick the shortest one
+    float shortest_path = std::numeric_limits<float>::max();
+    for(auto &goal : _goals)
+    {
+      expansion_result = nullptr;
+      expansion_result = _expander->tryAnalyticExpansion(
+        current_node, goal, neighborGetter, analytic_iterations, closest_distance);
+      if (expansion_result != nullptr) {
+          float path_distance = current_node->getAccumulatedCost();
+          if(path_distance < shortest_path)
+          {
+            shortest_path = path_distance;
+            current_node = expansion_result;
+          }
+      }
     }
-
+   
     // 3) Check if we're at the goal, backtrace if required
     if (isGoal(current_node)) {
       return current_node->backtracePath(path);
@@ -408,7 +418,7 @@ bool AStarAlgorithm<NodeT>::createPath(
 template<typename NodeT>
 bool AStarAlgorithm<NodeT>::isGoal(NodePtr & node)
 {
-  return node == getGoal();
+  return std::find(_goals.begin(), _goals.end(), node) != _goals.end();
 }
 
 
@@ -419,9 +429,9 @@ typename AStarAlgorithm<NodeT>::NodePtr & AStarAlgorithm<NodeT>::getStart()
 }
 
 template<typename NodeT>
-typename AStarAlgorithm<NodeT>::NodePtr & AStarAlgorithm<NodeT>::getGoal()
+typename std::vector<AStarAlgorithm<NodeT>::NodePtr> & AStarAlgorithm<NodeT>::getGoals()
 {
-  return _goal;
+  return _goals;
 }
 
 template<typename NodeT>
@@ -447,7 +457,7 @@ float AStarAlgorithm<NodeT>::getHeuristicCost(const NodePtr & node)
   const Coordinates node_coords =
     NodeT::getCoords(node->getIndex(), getSizeX(), getSizeDim3());
   float heuristic = NodeT::getHeuristicCost(
-    node_coords, _goal_coordinates, _costmap);
+    node_coords, _goals_coordinates, _costmap);
 
   if (heuristic < _best_heuristic_node.first) {
     _best_heuristic_node = {heuristic, node->getIndex()};
