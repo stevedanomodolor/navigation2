@@ -152,6 +152,13 @@ public:
    */
   NodePtr & getStart();
 
+
+   /**
+   * @brief Gets the vectors to the pointer reference to goal node
+   * @return Node pointer reference to goal node
+   */
+  std::vector<NodePtr> getGoals();
+
   /**
    * @brief Get maximum number of on-approach iterations after within threshold
    * @return Reference to Maximum on-appraoch iterations parameter

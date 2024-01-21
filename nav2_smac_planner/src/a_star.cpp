@@ -439,6 +439,12 @@ typename AStarAlgorithm<NodeT>::NodePtr & AStarAlgorithm<NodeT>::getStart()
   return _start;
 }
 
+template<typename NodeT>
+std::vector<typename AStarAlgorithm<NodeT>::NodePtr> AStarAlgorithm<NodeT>::getGoals()
+{
+  return _goals;
+}
+
 
 template<typename NodeT>
 typename AStarAlgorithm<NodeT>::NodePtr AStarAlgorithm<NodeT>::getNextNode()
