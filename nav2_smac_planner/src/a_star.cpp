@@ -241,20 +241,20 @@ void AStarAlgorithm<NodeT>::setGoal(
     break;
   }
 
-  // if (!_search_info.cache_obstacle_heuristic || goal_coordinates !=_goals_coordinates) {
-  //   if (!_start) {
-  //     throw std::runtime_error("Start must be set before goal.");
-  //   }
+  if (!_search_info.cache_obstacle_heuristic || goal_coordinates !=_goals_coordinates) {
+    if (!_start) {
+      throw std::runtime_error("Start must be set before goal.");
+    }
 
-  //   NodeT::resetObstacleHeuristic(_costmap, _start->pose.x, _start->pose.y, mx, my);
-  // }
+    NodeT::resetObstacleHeuristic(_costmap, _start->pose.x, _start->pose.y, mx, my);
+  }
 
-  // _goals_coordinates.clear();
-  // _goals_coordinates = goal_coordinates;
-  // for(int i = 0; i < _goals.size(); i++)
-  // {
-  //   _goals[i]->setPose(_goals_coordinates[i]);
-  // }
+  _goals_coordinates.clear();
+  _goals_coordinates = goal_coordinates;
+  for(int i = 0; i < _goals.size(); i++)
+  {
+    _goals[i]->setPose(_goals_coordinates[i]);
+  }
 }
 
 template<typename NodeT>
