@@ -153,12 +153,6 @@ public:
   NodePtr & getStart();
 
   /**
-   * @brief Get pointer reference to goal node
-   * @return Node pointer reference to goal node
-   */
-  NodePtr & getGoal();
-
-  /**
    * @brief Get maximum number of on-approach iterations after within threshold
    * @return Reference to Maximum on-appraoch iterations parameter
    */

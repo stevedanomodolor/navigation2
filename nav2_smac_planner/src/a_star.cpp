@@ -41,9 +41,9 @@ AStarAlgorithm<NodeT>::AStarAlgorithm(
   _x_size(0),
   _y_size(0),
   _search_info(search_info),
-  _goal_coordinates(Coordinates()),
+  _goals_coordinates(std::vector<Coordinates>()),
   _start(nullptr),
-  _goals(nullptr),
+  _goals(std::vector<NodePtr>()),
   _motion_model(motion_model)
 {
   _graph.reserve(100000);
@@ -241,20 +241,20 @@ void AStarAlgorithm<NodeT>::setGoal(
     break;
   }
 
-  if (!_search_info.cache_obstacle_heuristic || goal_coordinates !=_goals_coordinates) {
-    if (!_start) {
-      throw std::runtime_error("Start must be set before goal.");
-    }
+  // if (!_search_info.cache_obstacle_heuristic || goal_coordinates !=_goals_coordinates) {
+  //   if (!_start) {
+  //     throw std::runtime_error("Start must be set before goal.");
+  //   }
 
-    NodeT::resetObstacleHeuristic(_costmap, _start->pose.x, _start->pose.y, mx, my);
-  }
+  //   NodeT::resetObstacleHeuristic(_costmap, _start->pose.x, _start->pose.y, mx, my);
+  // }
 
-  _goals_coordinates.clear();
-  _goals_coordinates = goal_coordinates;
-  for(int i = 0; i < _goals_coordinates.size(); i++)
-  {
-    _goals[i]->setPose(_goals_coordinates[i]);
-  }
+  // _goals_coordinates.clear();
+  // _goals_coordinates = goal_coordinates;
+  // for(int i = 0; i < _goals.size(); i++)
+  // {
+  //   _goals[i]->setPose(_goals_coordinates[i]);
+  // }
 }
 
 template<typename NodeT>
@@ -266,16 +266,27 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
   }
 
   // Check if points were filled in
-  if (!_start || !_goals) {
-    throw std::runtime_error("Failed to compute path, no valid start or goal given.");
+  if (!_start || _goals.empty()) {
+    for(auto &goal : _goals)
+    {
+      if(!goal)
+      {
+        throw std::runtime_error("Failed to compute path, no start or goal given.");
+      }
+    }
   }
 
   // Check if ending point is valid
-  if (getToleranceHeuristic() < 0.001 &&
-    !_goal->isNodeValid(_traverse_unknown, _collision_checker))
+  if (getToleranceHeuristic() < 0.001)
   {
-    throw nav2_core::GoalOccupied("Goal was in lethal cost");
-  }
+    for(auto &goal : _goals)
+    {
+      if(!goal->isNodeValid(_traverse_unknown, _collision_checker))
+      {
+        throw nav2_core::GoalOccupied("Goal was in lethal cost");
+      }
+    }
+  } 
 
   // Note: We do not check the if the start is valid because it is cleared
   clearStart();
@@ -364,7 +375,7 @@ bool AStarAlgorithm<NodeT>::createPath(
       expansion_result = _expander->tryAnalyticExpansion(
         current_node, goal, neighborGetter, analytic_iterations, closest_distance);
       if (expansion_result != nullptr) {
-          float path_distance = current_node->getAccumulatedCost();
+          float path_distance = expansion_result->getAccumulatedCost();
           if(path_distance < shortest_path)
           {
             shortest_path = path_distance;
@@ -428,11 +439,6 @@ typename AStarAlgorithm<NodeT>::NodePtr & AStarAlgorithm<NodeT>::getStart()
   return _start;
 }
 
-template<typename NodeT>
-typename std::vector<AStarAlgorithm<NodeT>::NodePtr> & AStarAlgorithm<NodeT>::getGoals()
-{
-  return _goals;
-}
 
 template<typename NodeT>
 typename AStarAlgorithm<NodeT>::NodePtr AStarAlgorithm<NodeT>::getNextNode()
@@ -456,8 +462,15 @@ float AStarAlgorithm<NodeT>::getHeuristicCost(const NodePtr & node)
 {
   const Coordinates node_coords =
     NodeT::getCoords(node->getIndex(), getSizeX(), getSizeDim3());
-  float heuristic = NodeT::getHeuristicCost(
-    node_coords, _goals_coordinates, _costmap);
+    float heuristic = 0.0;
+    for(auto goal_coordinates : _goals_coordinates)
+    {
+      float current_heuristic = NodeT::getHeuristicCost(
+        node_coords, goal_coordinates, _costmap);
+      if (current_heuristic < heuristic) {
+        heuristic = current_heuristic;
+      }
+    }
 
   if (heuristic < _best_heuristic_node.first) {
     _best_heuristic_node = {heuristic, node->getIndex()};

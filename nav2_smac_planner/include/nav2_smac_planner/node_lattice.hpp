@@ -95,6 +95,7 @@ struct LatticeMotionTable
   float & getAngleFromBin(const unsigned int & bin_idx);
 
   unsigned int size_x;
+  unsigned int num_angle_quantization;
   float change_penalty;
   float non_straight_penalty;
   float cost_penalty;
