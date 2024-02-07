@@ -201,7 +201,7 @@ void AStarAlgorithm<NodeT>::setGoal(
 {
   _goals.clear();
   // _goals_coordinates.clear();
-  std::vector<Coordinates> goal_coordinates;
+  std::vector<typename NodeT::Coordinates> goal_coordinates;
   unsigned int number_of_bins = NodeT::motion_table.num_angle_quantization;
   switch (goal_heading)
   {
@@ -241,7 +241,7 @@ void AStarAlgorithm<NodeT>::setGoal(
     break;
   }
 
-  if (!_search_info.cache_obstacle_heuristic || goal_coordinates !=_goals_coordinates) {
+  if (!_search_info.cache_obstacle_heuristic) {// || goal_coordinates !=_goals_coordinates) {
     if (!_start) {
       throw std::runtime_error("Start must be set before goal.");
     }
@@ -266,6 +266,8 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
   }
 
   // Check if points were filled in
+  // print start goal
+  std::cout << "Start: " << _start->pose.x << ", " << _start->pose.y << ", " << _start->pose.theta << std::endl;
   if (!_start || _goals.empty()) {
     for(auto &goal : _goals)
     {
@@ -273,6 +275,7 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
       {
         throw std::runtime_error("Failed to compute path, no start or goal given.");
       }
+      std::cout << "Goal: " << goal->pose.x << ", " << goal->pose.y << ", " << goal->pose.theta << std::endl;
     }
   }
 
@@ -305,9 +308,13 @@ bool AStarAlgorithm<NodeT>::createPath(
   _best_heuristic_node = {std::numeric_limits<float>::max(), 0};
   clearQueue();
 
+  std::cout << "Before areInputsValid" << std::endl;
+
   if (!areInputsValid()) {
     return false;
   }
+
+  std::cout << "Starting A* search" << std::endl;
 
   // 0) Add starting point to the open set
   addNode(0.0, getStart());
@@ -337,6 +344,8 @@ bool AStarAlgorithm<NodeT>::createPath(
       return true;
     };
 
+  std::cout << "Before while loop" << std::endl;
+
   while (iterations < getMaxIterations() && !_queue.empty()) {
     // Check for planning timeout only on every Nth iteration
     if (iterations % _timing_interval == 0) {
@@ -358,6 +367,7 @@ bool AStarAlgorithm<NodeT>::createPath(
     // We allow for nodes to be queued multiple times in case
     // shorter paths result in it, but we can visit only once
     if (current_node->wasVisited()) {
+
       continue;
     }
 
@@ -391,6 +401,10 @@ bool AStarAlgorithm<NodeT>::createPath(
       // Optimization: Let us find when in tolerance and refine within reason
       approach_iterations++;
       if (approach_iterations >= getOnApproachMaxIterations()) {
+        std::cout << "Approach iterations exceeded" << std::endl;
+        std::cout << "Approach iterations: " << approach_iterations << std::endl;
+        std::cout << "getOnApproachMaxIterations(): " << getOnApproachMaxIterations() << std::endl;
+
         return _graph.at(_best_heuristic_node.second).backtracePath(path);
       }
     }
@@ -417,11 +431,13 @@ bool AStarAlgorithm<NodeT>::createPath(
       }
     }
   }
+  std::cout << "Iterations exceeded" << std::endl;
 
   if (_best_heuristic_node.first < getToleranceHeuristic()) {
     // If we run out of serach options, return the path that is closest, if within tolerance.
     return _graph.at(_best_heuristic_node.second).backtracePath(path);
   }
+  std::cout << "No path found" << std::endl;
 
   return false;
 }
@@ -466,6 +482,7 @@ void AStarAlgorithm<NodeT>::addNode(const float & cost, NodePtr & node)
 template<typename NodeT>
 float AStarAlgorithm<NodeT>::getHeuristicCost(const NodePtr & node)
 {
+  // @stevedan. I am a bit skeptical about this approach on multiple goal orientation
   const Coordinates node_coords =
     NodeT::getCoords(node->getIndex(), getSizeX(), getSizeDim3());
     float heuristic = 0.0;

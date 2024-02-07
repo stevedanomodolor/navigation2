@@ -80,16 +80,6 @@ public:
   }
 
   /**
-   * @brief operator!= for comparisons
-   * @param Node2D right hand side node reference
-   * @return If cell indicies are not equal
-   */
-  bool operator!=(const Node2D & rhs)
-  {
-    return this->_index != rhs._index;
-  }
-
-  /**
    * @brief Reset method for new search
    */
   void reset();

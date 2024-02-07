@@ -68,6 +68,8 @@ def getRandomGoal(costmap, start, max_cost, side_buffer, time_stamp, res):
     while True:
         row = randint(side_buffer, costmap.shape[0] - side_buffer)
         col = randint(side_buffer, costmap.shape[1] - side_buffer)
+        print("row: ", row, ", col: ", col)
+        print("---------------------------")
 
         start_x = start.pose.position.x
         start_y = start.pose.position.y
@@ -106,7 +108,7 @@ def main():
     costmap = np.asarray(costmap_msg.data)
     costmap.resize(costmap_msg.metadata.size_y, costmap_msg.metadata.size_x)
 
-    planners = ['Navfn', 'ThetaStar', 'SmacHybrid', 'Smac2d', 'SmacLattice']
+    planners = ['SmacHybrid', 'Smac2d', 'SmacLattice']
     max_cost = 210
     side_buffer = 100
     time_stamp = navigator.get_clock().now().to_msg()

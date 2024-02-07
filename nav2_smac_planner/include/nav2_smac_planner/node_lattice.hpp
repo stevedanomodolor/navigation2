@@ -144,6 +144,8 @@ public:
     return this->_index == rhs._index;
   }
 
+
+
   /**
    * @brief setting continuous coordinate search poses (in partial-cells)
    * @param Pose pose
