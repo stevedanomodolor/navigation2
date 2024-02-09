@@ -328,10 +328,12 @@ AmclNode::on_cleanup(const rclcpp_lifecycle::State & /*state*/)
   nomotion_update_srv_.reset();
   initial_pose_sub_.reset();
   laser_scan_connection_.disconnect();
+  tf_listener_.reset();  //  listener may access lase_scan_filter_, so it should be reset earlier
   laser_scan_filter_.reset();
   laser_scan_sub_.reset();
 
   // Map
+  map_sub_.reset();  //  map_sub_ may access map_, so it should be reset earlier
   if (map_ != NULL) {
     map_free(map_);
     map_ = nullptr;
@@ -341,7 +343,6 @@ AmclNode::on_cleanup(const rclcpp_lifecycle::State & /*state*/)
 
   // Transforms
   tf_broadcaster_.reset();
-  tf_listener_.reset();
   tf_buffer_.reset();
 
   // PubSub
@@ -1167,7 +1168,7 @@ AmclNode::dynamicParametersCallback(
     if (param_type == ParameterType::PARAMETER_DOUBLE) {
       if (param_name == "alpha1") {
         alpha1_ = parameter.as_double();
-        //alpha restricted to be non-negative
+        // alpha restricted to be non-negative
         if (alpha1_ < 0.0) {
           RCLCPP_WARN(
             get_logger(), "You've set alpha1 to be negative,"
@@ -1177,7 +1178,7 @@ AmclNode::dynamicParametersCallback(
         reinit_odom = true;
       } else if (param_name == "alpha2") {
         alpha2_ = parameter.as_double();
-        //alpha restricted to be non-negative
+        // alpha restricted to be non-negative
         if (alpha2_ < 0.0) {
           RCLCPP_WARN(
             get_logger(), "You've set alpha2 to be negative,"
@@ -1187,7 +1188,7 @@ AmclNode::dynamicParametersCallback(
         reinit_odom = true;
       } else if (param_name == "alpha3") {
         alpha3_ = parameter.as_double();
-        //alpha restricted to be non-negative
+        // alpha restricted to be non-negative
         if (alpha3_ < 0.0) {
           RCLCPP_WARN(
             get_logger(), "You've set alpha3 to be negative,"
@@ -1197,7 +1198,7 @@ AmclNode::dynamicParametersCallback(
         reinit_odom = true;
       } else if (param_name == "alpha4") {
         alpha4_ = parameter.as_double();
-        //alpha restricted to be non-negative
+        // alpha restricted to be non-negative
         if (alpha4_ < 0.0) {
           RCLCPP_WARN(
             get_logger(), "You've set alpha4 to be negative,"
@@ -1207,7 +1208,7 @@ AmclNode::dynamicParametersCallback(
         reinit_odom = true;
       } else if (param_name == "alpha5") {
         alpha5_ = parameter.as_double();
-        //alpha restricted to be non-negative
+        // alpha restricted to be non-negative
         if (alpha5_ < 0.0) {
           RCLCPP_WARN(
             get_logger(), "You've set alpha5 to be negative,"
