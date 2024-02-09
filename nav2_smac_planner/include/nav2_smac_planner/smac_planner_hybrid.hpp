@@ -120,6 +120,7 @@ protected:
   bool _debug_visualizations;
   std::string _motion_model_for_search;
   MotionModel _motion_model;
+  GoalHeading _goal_heading;
   rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>::SharedPtr _raw_plan_publisher;
   rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::MarkerArray>::SharedPtr
     _planned_footprints_publisher;

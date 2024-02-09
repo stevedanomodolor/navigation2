@@ -28,6 +28,14 @@ enum class MotionModel
   STATE_LATTICE = 4,
 };
 
+enum class GoalHeading 
+{
+  UNKNOWN = 0,
+  DEFAULT = 1,
+  BIDIRECTIONAL = 2, 
+  ANY_HEADING = 3,
+};
+
 inline std::string toString(const MotionModel & n)
 {
   switch (n) {
@@ -56,6 +64,34 @@ inline MotionModel fromString(const std::string & n)
     return MotionModel::STATE_LATTICE;
   } else {
     return MotionModel::UNKNOWN;
+  }
+}
+
+inline std::string toString(const GoalHeading & n)
+{
+  switch (n)
+  {
+    case GoalHeading::DEFAULT:
+      return "DEFAULT";
+    case GoalHeading::BIDIRECTIONAL:
+      return "BIDIRECTIONAL";
+    case GoalHeading::ANY_HEADING:
+      return "ANY_HEADING";
+    default:
+      return "Unknown";
+  }
+}
+
+inline GoalHeading fromStringToGH(const std::string & n)
+{
+  if(n == "DEFAULT") {
+    return GoalHeading::DEFAULT;
+  } else if(n == "BIDIRECTIONAL") {
+    return GoalHeading::BIDIRECTIONAL;
+  } else if (n == "ANY_HEADING") {
+    return GoalHeading::ANY_HEADING;
+  } else {
+    return GoalHeading::UNKNOWN;
   }
 }
 

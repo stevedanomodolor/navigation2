@@ -139,6 +139,21 @@ void SmacPlannerLattice::configure(
     node, name + ".debug_visualizations", rclcpp::ParameterValue(false));
   node->get_parameter(name + ".debug_visualizations", _debug_visualizations);
 
+  std::string goal_heading_type;
+  nav2_util::declare_parameter_if_not_declared(
+  node, name + ".goal_heading", rclcpp::ParameterValue("DEFAULT"));
+  node->get_parameter(name + ".goal_heading", goal_heading_type);
+
+  _goal_heading = fromStringToGH(goal_heading_type);
+  if(_goal_heading == GoalHeading::UNKNOWN)
+  {
+    RCLCPP_WARN(
+      _logger,
+      "Unable to get GoalHeader type. Given '%s', "
+      "Valid options are DEFAULT, BIDIRECTIONAL, ANY_HEADING. ",
+      goal_heading_type.c_str());
+  }
+
   _metadata = LatticeMotionTable::getLatticeMetadata(_search_info.lattice_filepath);
   _search_info.minimum_turning_radius =
     _metadata.min_turning_radius / (_costmap->getResolution());
@@ -290,7 +305,8 @@ nav_msgs::msg::Path SmacPlannerLattice::createPlan(
   }
   _a_star->setGoal(
     mx, my,
-    NodeLattice::motion_table.getClosestAngularBin(tf2::getYaw(goal.pose.orientation)));
+    NodeLattice::motion_table.getClosestAngularBin(tf2::getYaw(goal.pose.orientation)), 
+    _goal_heading);
 
   // Setup message
   nav_msgs::msg::Path plan;
@@ -524,6 +540,18 @@ SmacPlannerLattice::dynamicParametersCallback(std::vector<rclcpp::Parameter> par
         _metadata = LatticeMotionTable::getLatticeMetadata(_search_info.lattice_filepath);
         _search_info.minimum_turning_radius =
           _metadata.min_turning_radius / (_costmap->getResolution());
+      }
+      else if (name == _name + ".goal_heading") {
+        std::string goal_heading_type = parameter.as_string();
+        _goal_heading = fromStringToGH(goal_heading_type);
+        if(_goal_heading == GoalHeading::UNKNOWN)
+        {
+          RCLCPP_WARN(
+            _logger,
+            "Unable to get GoalHeader type. Given '%s', "
+            "Valid options are DEFAULT, BIDIRECTIONAL, ANY_HEADING. ",
+            goal_heading_type.c_str());
+        }
       }
     }
   }

@@ -117,6 +117,7 @@ protected:
     _planned_footprints_publisher;
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PoseArray>::SharedPtr
     _expansions_publisher;
+  GoalHeading _goal_heading;
   std::mutex _mutex;
   rclcpp_lifecycle::LifecycleNode::WeakPtr _node;
 
