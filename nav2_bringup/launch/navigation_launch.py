@@ -154,6 +154,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
+                prefix=['xterm -e gdb -ex run --args'],
                 remappings=remappings,
             ),
             Node(

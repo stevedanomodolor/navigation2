@@ -41,15 +41,15 @@ AStarAlgorithm<NodeT>::AStarAlgorithm(
   _x_size(0),
   _y_size(0),
   _search_info(search_info),
-  _goals_coordinates(CoordinateVector),
+  _goals_coordinates(CoordinateVector()),
   _start(nullptr),
-  _goals(NodeVector),
+  _goals(NodeVector()),
   _motion_model(motion_model)
 {
   _graph.reserve(100000);
   // TODO remove 
-  _goals.reserve(1);
-  _goals_coordinates.reserve(1);
+  _goals.resize(1);
+  _goals_coordinates.resize(1);
 }
 
 template<typename NodeT>
@@ -197,7 +197,8 @@ template<typename NodeT>
 void AStarAlgorithm<NodeT>::setGoal(
   const unsigned int & mx,
   const unsigned int & my,
-  const unsigned int & dim_3)
+  const unsigned int & dim_3,
+  const GoalHeading & goal_heading)
 {
   _goals[0] = addToGraph(NodeT::getIndex(mx, my, dim_3));
 
@@ -206,7 +207,7 @@ void AStarAlgorithm<NodeT>::setGoal(
     static_cast<float>(my),
     static_cast<float>(dim_3));
 
-  if (!_search_info.cache_obstacle_heuristic || goal_coords != _goal_coordinates[0]) {
+  if (!_search_info.cache_obstacle_heuristic || goal_coords != _goals_coordinates[0]) {
     if (!_start) {
       throw std::runtime_error("Start must be set before goal.");
     }
@@ -319,8 +320,14 @@ bool AStarAlgorithm<NodeT>::createPath(
 
     // 2.1) Use an analytic expansion (if available) to generate a path
     expansion_result = nullptr;
+    NodePtr goal = _goals[0];
+    if (goal == nullptr) {
+      std::cout << "-----------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+      std::cout << "AStarAlgorithm::createPath: goal == nullptr" << std::endl;
+      return false;
+    }
     expansion_result = _expander->tryAnalyticExpansion(
-      current_node, getGoal(), neighborGetter, analytic_iterations, closest_distance);
+      current_node, goal, neighborGetter, analytic_iterations, closest_distance);
     if (expansion_result != nullptr) {
       current_node = expansion_result;
     }

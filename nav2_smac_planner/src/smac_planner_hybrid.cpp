@@ -643,6 +643,7 @@ SmacPlannerHybrid::dynamicParametersCallback(std::vector<rclcpp::Parameter> para
             "Valid options are DEFAULT, BIDIRECTIONAL, ANY_HEADING. ",
             goal_heading_type.c_str());
         }
+      }
     }
   }
 

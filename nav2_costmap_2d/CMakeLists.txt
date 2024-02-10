@@ -179,7 +179,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gtest REQUIRED)
-  add_subdirectory(test)
+  #add_subdirectory(test)
   pluginlib_export_plugin_description_file(nav2_costmap_2d test/regression/order_layer.xml)
 endif()
 

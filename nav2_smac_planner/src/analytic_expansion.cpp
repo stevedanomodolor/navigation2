@@ -80,6 +80,21 @@ typename AnalyticExpansion<NodeT>::NodePtr AnalyticExpansion<NodeT>::tryAnalytic
     if (analytic_iterations <= 0) {
       // Reset the counter and try the analytic path expansion
       analytic_iterations = desired_iterations;
+      // check if goal_node is not a nullptr
+      std::cout << "------------------------------------------------------" << std::endl;
+      if (!goal_node) {
+        std::cerr << "Goal node is nullptr" << std::endl;
+      }
+      if (!current_node) {
+        std::cerr << "Current node is nullptr" << std::endl;
+      }
+      if(!getter) {
+        std::cerr << "Getter is nullptr" << std::endl;
+      }
+      if(current_node->motion_table.state_space) {
+        std::cerr << "State space is nullptr" << std::endl;
+      }
+
       AnalyticExpansionNodes analytic_nodes =
         getAnalyticPath(current_node, goal_node, getter, current_node->motion_table.state_space);
       if (!analytic_nodes.empty()) {

@@ -38,9 +38,9 @@ def main():
 
 
     # generate path
-    planner = 'SmacPlanner2D'
+    # planner = 'SmacPlanner2D'
     # planner = 'SmacPlannerHybrid'
-    # planner = 'SmacPlannerLattice'
+    planner = 'SmacPlannerLattice'
     path = navigator._getPathImpl(start, goal, planner, use_start=True)
     if path is not None and path.error_code == 0:
         print("Path found by ", planner)

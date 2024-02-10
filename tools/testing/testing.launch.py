@@ -45,6 +45,7 @@ def generate_launch_description():
                 executable='planner_server',
                 name='planner_server',
                 output='screen',
+                prefix=['xterm -bg black -fg white -e gdb -ex run --args'],
                 parameters=[config],
             ),
             Node(
