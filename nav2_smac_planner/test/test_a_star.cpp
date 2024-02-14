@@ -47,10 +47,13 @@ TEST(AStarTest, test_a_star_2d)
   float tolerance = 0.0;
   float some_tolerance = 20.0;
   int it_on_approach = 10;
+  int terminal_checking_interval = 5000;
   double max_planning_time = 120.0;
   int num_it = 0;
 
-  a_star.initialize(false, max_iterations, it_on_approach, max_planning_time, 0.0, 1);
+  a_star.initialize(
+    false, max_iterations, it_on_approach, terminal_checking_interval,
+    max_planning_time, 0.0, 1);
 
   nav2_costmap_2d::Costmap2D * costmapA =
     new nav2_costmap_2d::Costmap2D(100, 100, 0.1, 0.0, 0.0, 0);
@@ -67,6 +70,10 @@ TEST(AStarTest, test_a_star_2d)
   auto costmap = costmap_ros->getCostmap();
   *costmap = *costmapA;
 
+  auto dummy_cancel_checker = []() {
+      return false;
+    };
+
   // functional case testing
   std::unique_ptr<nav2_smac_planner::GridCollisionChecker> checker =
     std::make_unique<nav2_smac_planner::GridCollisionChecker>(costmap_ros, 1, lnode);
@@ -75,7 +82,7 @@ TEST(AStarTest, test_a_star_2d)
   a_star.setStart(20u, 20u, 0);
   a_star.setGoal(80u, 80u, 0);
   nav2_smac_planner::Node2D::CoordinateVector path;
-  EXPECT_TRUE(a_star.createPath(path, num_it, tolerance));
+  EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker));
   EXPECT_EQ(num_it, 2414);
 
   // check path is the right size and collision free
@@ -92,28 +99,40 @@ TEST(AStarTest, test_a_star_2d)
   // failure cases with invalid inputs
   nav2_smac_planner::AStarAlgorithm<nav2_smac_planner::Node2D> a_star_2(
     nav2_smac_planner::MotionModel::TWOD, info);
-  a_star_2.initialize(false, max_iterations, it_on_approach, max_planning_time, 0, 1);
+  a_star_2.initialize(
+    false, max_iterations, it_on_approach, terminal_checking_interval,
+    max_planning_time, 0, 1);
   num_it = 0;
-  EXPECT_THROW(a_star_2.createPath(path, num_it, tolerance), std::runtime_error);
+  EXPECT_THROW(
+    a_star_2.createPath(
+      path, num_it, tolerance,
+      dummy_cancel_checker), std::runtime_error);
   a_star_2.setCollisionChecker(checker.get());
   num_it = 0;
-  EXPECT_THROW(a_star_2.createPath(path, num_it, tolerance), std::runtime_error);
+  EXPECT_THROW(
+    a_star_2.createPath(
+      path, num_it, tolerance,
+      dummy_cancel_checker), std::runtime_error);
   a_star_2.setStart(0, 0, 0);  // valid
   a_star_2.setGoal(50, 50, 0);  // invalid
   num_it = 0;
-  EXPECT_THROW(a_star_2.createPath(path, num_it, tolerance), std::runtime_error);
+  EXPECT_THROW(
+    a_star_2.createPath(
+      path, num_it, tolerance,
+      dummy_cancel_checker), std::runtime_error);
   num_it = 0;
   // invalid goal but liberal tolerance
   a_star_2.setStart(20, 20, 0);  // valid
   a_star_2.setGoal(50, 50, 0);  // invalid
-  EXPECT_TRUE(a_star_2.createPath(path, num_it, some_tolerance));
+  EXPECT_TRUE(a_star_2.createPath(path, num_it, some_tolerance, dummy_cancel_checker));
   EXPECT_EQ(path.size(), 21u);
   for (unsigned int i = 0; i != path.size(); i++) {
     EXPECT_EQ(costmapA->getCost(path[i].x, path[i].y), 0);
   }
 
   EXPECT_TRUE(a_star_2.getStart() != nullptr);
-  EXPECT_TRUE(a_star_2.getGoal() != nullptr);
+  EXPECT_TRUE(!a_star_2.getGoals().empty());
+  EXPECT_TRUE(a_star_2.getGoals().size() == 1);
   EXPECT_EQ(a_star_2.getSizeX(), 100u);
   EXPECT_EQ(a_star_2.getSizeY(), 100u);
   EXPECT_EQ(a_star_2.getSizeDim3(), 1u);
@@ -141,10 +160,13 @@ TEST(AStarTest, test_a_star_se2)
   int max_iterations = 10000;
   float tolerance = 10.0;
   int it_on_approach = 10;
+  int terminal_checking_interval = 5000;
   double max_planning_time = 120.0;
   int num_it = 0;
 
-  a_star.initialize(false, max_iterations, it_on_approach, max_planning_time, 401, size_theta);
+  a_star.initialize(
+    false, max_iterations, it_on_approach, terminal_checking_interval,
+    max_planning_time, 401, size_theta);
 
   nav2_costmap_2d::Costmap2D * costmapA =
     new nav2_costmap_2d::Costmap2D(100, 100, 0.1, 0.0, 0.0, 0);
@@ -173,7 +195,11 @@ TEST(AStarTest, test_a_star_se2)
   std::unique_ptr<std::vector<std::tuple<float, float, float>>> expansions = nullptr;
   expansions = std::make_unique<std::vector<std::tuple<float, float, float>>>();
 
-  EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, expansions.get()));
+  auto dummy_cancel_checker = []() {
+      return false;
+    };
+
+  EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker, expansions.get()));
 
   // check path is the right size and collision free
   EXPECT_EQ(num_it, 3146);
@@ -214,11 +240,14 @@ TEST(AStarTest, test_a_star_lattice)
   int max_iterations = 10000;
   float tolerance = 10.0;
   int it_on_approach = 10;
+  int terminal_checking_interval = 5000;
   double max_planning_time = 120.0;
   int num_it = 0;
 
   a_star.initialize(
-    false, max_iterations, std::numeric_limits<int>::max(), max_planning_time, 401, size_theta);
+    false, max_iterations,
+    std::numeric_limits<int>::max(), terminal_checking_interval, max_planning_time, 401,
+    size_theta);
 
   nav2_costmap_2d::Costmap2D * costmapA =
     new nav2_costmap_2d::Costmap2D(100, 100, 0.05, 0.0, 0.0, 0);
@@ -239,12 +268,16 @@ TEST(AStarTest, test_a_star_lattice)
     std::make_unique<nav2_smac_planner::GridCollisionChecker>(costmap_ros, size_theta, lnode);
   checker->setFootprint(nav2_costmap_2d::Footprint(), true, 0.0);
 
+  auto dummy_cancel_checker = []() {
+      return false;
+    };
+
   // functional case testing
   a_star.setCollisionChecker(checker.get());
   a_star.setStart(5u, 5u, 0u);
   a_star.setGoal(40u, 40u, 1u);
   nav2_smac_planner::NodeLattice::CoordinateVector path;
-  EXPECT_TRUE(a_star.createPath(path, num_it, tolerance));
+  EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker));
 
   // check path is the right size and collision free
   EXPECT_EQ(num_it, 22);
@@ -278,10 +311,13 @@ TEST(AStarTest, test_se2_single_pose_path)
   int max_iterations = 100;
   float tolerance = 10.0;
   int it_on_approach = 10;
+  int terminal_checking_interval = 5000;
   double max_planning_time = 120.0;
   int num_it = 0;
 
-  a_star.initialize(false, max_iterations, it_on_approach, max_planning_time, 401, size_theta);
+  a_star.initialize(
+    false, max_iterations, it_on_approach, terminal_checking_interval,
+    max_planning_time, 401, size_theta);
 
   nav2_costmap_2d::Costmap2D * costmapA =
     new nav2_costmap_2d::Costmap2D(100, 100, 0.1, 0.0, 0.0, 0);
@@ -296,13 +332,16 @@ TEST(AStarTest, test_se2_single_pose_path)
     std::make_unique<nav2_smac_planner::GridCollisionChecker>(costmap_ros, size_theta, lnode);
   checker->setFootprint(nav2_costmap_2d::Footprint(), true, 0.0);
 
+  auto dummy_cancel_checker = []() {
+      return false;
+    };
   // functional case testing
   a_star.setCollisionChecker(checker.get());
   a_star.setStart(10u, 10u, 0u);
   // Goal is one costmap cell away
   a_star.setGoal(12u, 10u, 0u);
   nav2_smac_planner::NodeHybrid::CoordinateVector path;
-  EXPECT_TRUE(a_star.createPath(path, num_it, tolerance));
+  EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker));
 
   // Check that the path is length one
   // With the current implementation, this produces a longer path
@@ -310,6 +349,80 @@ TEST(AStarTest, test_se2_single_pose_path)
   EXPECT_GE(path.size(), 1u);
 
   delete costmapA;
+}
+
+TEST(AStarTest, test_goal_heading_mode)
+{
+  auto lnode = std::make_shared<rclcpp_lifecycle::LifecycleNode>("test");
+  nav2_smac_planner::SearchInfo info;
+  info.change_penalty = 0.1;
+  info.non_straight_penalty = 1.1;
+  info.reverse_penalty = 2.0;
+  info.minimum_turning_radius = 8;  // in grid coordinates
+  info.retrospective_penalty = 0.015;
+  info.analytic_expansion_max_length = 20.0;  // in grid coordinates
+  info.analytic_expansion_ratio = 3.5;
+  unsigned int size_theta = 72;
+  info.cost_penalty = 1.7;
+  nav2_smac_planner::AStarAlgorithm<nav2_smac_planner::NodeHybrid> a_star(
+    nav2_smac_planner::MotionModel::DUBIN, info);
+  int max_iterations = 10000;
+  float tolerance = 10.0;
+  int it_on_approach = 10;
+  int terminal_checking_interval = 5000;
+  double max_planning_time = 120.0;
+  int num_it = 0;
+
+  // BIDIRECTIONAL goal heading mode
+  a_star.initialize(
+    false, max_iterations, it_on_approach, terminal_checking_interval,
+    max_planning_time, 401, size_theta, nav2_smac_planner::GoalHeadingMode::BIDIRECTIONAL);
+
+  nav2_costmap_2d::Costmap2D * costmapA =
+    new nav2_costmap_2d::Costmap2D(100, 100, 0.1, 0.0, 0.0, 0);
+
+  // Convert raw costmap into a costmap ros object
+  auto costmap_ros = std::make_shared<nav2_costmap_2d::Costmap2DROS>();
+  costmap_ros->on_configure(rclcpp_lifecycle::State());
+  auto costmap = costmap_ros->getCostmap();
+  *costmap = *costmapA;
+
+  std::unique_ptr<nav2_smac_planner::GridCollisionChecker> checker =
+    std::make_unique<nav2_smac_planner::GridCollisionChecker>(costmap_ros, size_theta, lnode);
+  checker->setFootprint(nav2_costmap_2d::Footprint(), true, 0.0);
+
+  a_star.setCollisionChecker(checker.get());
+  a_star.setStart(10u, 10u, 0u);
+  a_star.setGoal(80u, 80u, 40u);
+  nav2_smac_planner::NodeHybrid::CoordinateVector path;
+  std::unique_ptr<std::vector<std::tuple<float, float, float>>> expansions = nullptr;
+  expansions = std::make_unique<std::vector<std::tuple<float, float, float>>>();
+
+  auto dummy_cancel_checker = []() {
+      return false;
+    };
+
+  EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker, expansions.get()));
+
+  EXPECT_TRUE(a_star.getGoals().size() == 2);
+  EXPECT_TRUE(a_star.getInitialGoalCoordinate().theta == 40u);
+
+
+  // ALL_DIRECTION goal heading mode
+  a_star.initialize(
+    false, max_iterations, it_on_approach, terminal_checking_interval,
+    max_planning_time, 401, size_theta, nav2_smac_planner::GoalHeadingMode::ALL_DIRECTION);
+
+  a_star.setCollisionChecker(checker.get());
+  a_star.setStart(10u, 10u, 0u);
+  a_star.setGoal(80u, 80u, 40u);
+
+  unsigned int num_bins = nav2_smac_planner::NodeHybrid::motion_table.num_angle_quantization;
+  EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker, expansions.get()));
+  EXPECT_TRUE(a_star.getGoals().size() == num_bins);
+  // first goal should be the same the one set by the user
+  EXPECT_TRUE(a_star.getInitialGoalCoordinate().theta == 40u);
+
 }
 
 TEST(AStarTest, test_constants)
@@ -323,6 +436,15 @@ TEST(AStarTest, test_constants)
   mm = nav2_smac_planner::MotionModel::REEDS_SHEPP;  // reeds-shepp
   EXPECT_EQ(nav2_smac_planner::toString(mm), std::string("Reeds-Shepp"));
 
+  nav2_smac_planner::GoalHeadingMode gh = nav2_smac_planner::GoalHeadingMode::UNKNOWN;
+  EXPECT_EQ(nav2_smac_planner::toString(gh), std::string("Unknown"));
+  gh = nav2_smac_planner::GoalHeadingMode::DEFAULT;  // default
+  EXPECT_EQ(nav2_smac_planner::toString(gh), std::string("DEFAULT"));
+  gh = nav2_smac_planner::GoalHeadingMode::BIDIRECTIONAL;  // bidirectional
+  EXPECT_EQ(nav2_smac_planner::toString(gh), std::string("BIDIRECTIONAL"));
+  gh = nav2_smac_planner::GoalHeadingMode::ALL_DIRECTION;  // all_direction
+  EXPECT_EQ(nav2_smac_planner::toString(gh), std::string("ALL_DIRECTION"));
+
   EXPECT_EQ(
     nav2_smac_planner::fromString(
       "2D"), nav2_smac_planner::MotionModel::TWOD);
@@ -331,4 +453,16 @@ TEST(AStarTest, test_constants)
     nav2_smac_planner::fromString(
       "REEDS_SHEPP"), nav2_smac_planner::MotionModel::REEDS_SHEPP);
   EXPECT_EQ(nav2_smac_planner::fromString("NONE"), nav2_smac_planner::MotionModel::UNKNOWN);
+
+  EXPECT_EQ(
+    nav2_smac_planner::fromStringToGH(
+      "DEFAULT"), nav2_smac_planner::GoalHeadingMode::DEFAULT);
+  EXPECT_EQ(
+    nav2_smac_planner::fromStringToGH(
+      "BIDIRECTIONAL"), nav2_smac_planner::GoalHeadingMode::BIDIRECTIONAL);
+  EXPECT_EQ(
+    nav2_smac_planner::fromStringToGH(
+      "ALL_DIRECTION"), nav2_smac_planner::GoalHeadingMode::ALL_DIRECTION);
+  EXPECT_EQ(
+    nav2_smac_planner::fromStringToGH("NONE"), nav2_smac_planner::GoalHeadingMode::UNKNOWN);
 }

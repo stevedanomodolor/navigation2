@@ -95,6 +95,9 @@ void SmacPlannerHybrid::configure(
     node, name + ".max_on_approach_iterations", rclcpp::ParameterValue(1000));
   node->get_parameter(name + ".max_on_approach_iterations", _max_on_approach_iterations);
   nav2_util::declare_parameter_if_not_declared(
+    node, name + ".terminal_checking_interval", rclcpp::ParameterValue(5000));
+  node->get_parameter(name + ".terminal_checking_interval", _terminal_checking_interval);
+  nav2_util::declare_parameter_if_not_declared(
     node, name + ".smooth_path", rclcpp::ParameterValue(true));
   node->get_parameter(name + ".smooth_path", smooth_path);
 
@@ -164,6 +167,19 @@ void SmacPlannerHybrid::configure(
   nav2_util::declare_parameter_if_not_declared(
     node, name + ".motion_model_for_search", rclcpp::ParameterValue(std::string("DUBIN")));
   node->get_parameter(name + ".motion_model_for_search", _motion_model_for_search);
+  std::string goal_heading_type;
+  nav2_util::declare_parameter_if_not_declared(
+    node, name + ".goal_heading_mode", rclcpp::ParameterValue("DEFAULT"));
+  node->get_parameter(name + ".goal_heading_mode", goal_heading_type);
+  GoalHeadingMode goal_heading_mode = fromStringToGH(goal_heading_type);
+  if (goal_heading_mode == GoalHeadingMode::UNKNOWN) {
+    std::string error_msg = "Unable to get GoalHeader type. Given '" + goal_heading_type + "' "
+      "Valid options are DEFAULT, BIDIRECTIONAL, ALL_DIRECTION. ";
+    throw nav2_core::PlannerException(error_msg);
+  } else {
+    _goal_heading_mode = goal_heading_mode;
+  }
+
   _motion_model = fromString(_motion_model_for_search);
   if (_motion_model == MotionModel::UNKNOWN) {
     RCLCPP_WARN(
@@ -228,9 +244,11 @@ void SmacPlannerHybrid::configure(
     _allow_unknown,
     _max_iterations,
     _max_on_approach_iterations,
+    _terminal_checking_interval,
     _max_planning_time,
     _lookup_table_dim,
-    _angle_quantizations);
+    _angle_quantizations,
+    _goal_heading_mode);
 
   // Initialize path smoother
   if (smooth_path) {
@@ -318,7 +336,8 @@ void SmacPlannerHybrid::cleanup()
 
 nav_msgs::msg::Path SmacPlannerHybrid::createPlan(
   const geometry_msgs::msg::PoseStamped & start,
-  const geometry_msgs::msg::PoseStamped & goal)
+  const geometry_msgs::msg::PoseStamped & goal,
+  std::function<bool()> cancel_checker)
 {
   std::lock_guard<std::mutex> lock_reinit(_mutex);
   steady_clock::time_point a = steady_clock::now();
@@ -394,7 +413,7 @@ nav_msgs::msg::Path SmacPlannerHybrid::createPlan(
   // Note: All exceptions thrown are handled by the planner server and returned to the action
   if (!_a_star->createPath(
       path, num_iterations,
-      _tolerance / static_cast<float>(costmap->getResolution()), expansions.get()))
+      _tolerance / static_cast<float>(costmap->getResolution()), cancel_checker, expansions.get()))
   {
     if (_debug_visualizations) {
       geometry_msgs::msg::PoseArray msg;
@@ -598,6 +617,9 @@ SmacPlannerHybrid::dynamicParametersCallback(std::vector<rclcpp::Parameter> para
             "disabling tolerance and on approach iterations.");
           _max_on_approach_iterations = std::numeric_limits<int>::max();
         }
+      } else if (name == _name + ".terminal_checking_interval") {
+        reinit_a_star = true;
+        _terminal_checking_interval = parameter.as_int();
       } else if (name == _name + ".angle_quantization_bins") {
         reinit_collision_checker = true;
         reinit_a_star = true;
@@ -615,6 +637,23 @@ SmacPlannerHybrid::dynamicParametersCallback(std::vector<rclcpp::Parameter> para
             "Unable to get MotionModel search type. Given '%s', "
             "valid options are MOORE, VON_NEUMANN, DUBIN, REEDS_SHEPP.",
             _motion_model_for_search.c_str());
+        }
+      } else if (name == _name + ".goal_heading_mode") {
+        std::string goal_heading_type = parameter.as_string();
+        GoalHeadingMode goal_heading_mode = fromStringToGH(goal_heading_type);
+        RCLCPP_INFO(
+          _logger,
+          "GoalHeadingMode type set to '%s'.",
+          goal_heading_type.c_str());
+        if (goal_heading_mode == GoalHeadingMode::UNKNOWN) {
+          RCLCPP_WARN(
+            _logger,
+            "Unable to get GoalHeader type. Given '%s', "
+            "Valid options are DEFAULT, BIDIRECTIONAL, ALL_DIRECTION. ",
+            goal_heading_type.c_str());
+        } else {
+          reinit_a_star = true;
+          _goal_heading_mode = goal_heading_mode;
         }
       }
     }
@@ -653,9 +692,11 @@ SmacPlannerHybrid::dynamicParametersCallback(std::vector<rclcpp::Parameter> para
         _allow_unknown,
         _max_iterations,
         _max_on_approach_iterations,
+        _terminal_checking_interval,
         _max_planning_time,
         _lookup_table_dim,
-        _angle_quantizations);
+        _angle_quantizations,
+        _goal_heading_mode);
     }
 
     // Re-Initialize costmap downsampler

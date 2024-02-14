@@ -19,6 +19,7 @@
 #include <vector>
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 #include <queue>
 #include <utility>
@@ -51,6 +52,7 @@ public:
   typedef NodeT * NodePtr;
   typedef robin_hood::unordered_node_map<unsigned int, NodeT> Graph;
   typedef std::vector<NodePtr> NodeVector;
+  typedef std::unordered_set<NodePtr> NodeSet;
   typedef std::pair<float, NodeBasic<NodeT>> NodeElement;
   typedef typename NodeT::Coordinates Coordinates;
   typedef typename NodeT::CoordinateVector CoordinateVector;
@@ -88,6 +90,8 @@ public:
    * @param max_on_approach_iterations Maximum number of iterations before returning a valid
    * path once within thresholds to refine path
    * comes at more compute time but smoother paths.
+   * @param terminal_checking_interval Number of iterations to check if the task has been canceled or
+   * or planning time exceeded
    * @param max_planning_time Maximum time (in seconds) to wait for a plan, createPath returns
    * false after this timeout
    */
@@ -95,20 +99,24 @@ public:
     const bool & allow_unknown,
     int & max_iterations,
     const int & max_on_approach_iterations,
+    const int & terminal_checking_interval,
     const double & max_planning_time,
     const float & lookup_table_size,
-    const unsigned int & dim_3_size);
+    const unsigned int & dim_3_size,
+    const GoalHeadingMode & goal_heading_mode = GoalHeadingMode::DEFAULT);
 
   /**
    * @brief Creating path from given costmap, start, and goal
    * @param path Reference to a vector of indicies of generated path
    * @param num_iterations Reference to number of iterations to create plan
    * @param tolerance Reference to tolerance in costmap nodes
+   * @param cancel_checker Function to check if the task has been canceled
    * @param expansions_log Optional expansions logged for debug
    * @return if plan was successful
    */
   bool createPath(
     CoordinateVector & path, int & num_iterations, const float & tolerance,
+    std::function<bool()> cancel_checker,
     std::vector<std::tuple<float, float, float>> * expansions_log = nullptr);
 
   /**
@@ -155,7 +163,7 @@ public:
    * @brief Get pointer reference to goal node
    * @return Node pointer reference to goal node
    */
-  NodePtr & getGoal();
+  NodeSet & getGoals();
 
   /**
    * @brief Get maximum number of on-approach iterations after within threshold
@@ -186,6 +194,13 @@ public:
    * @return Number of angle bins / Z dimension
    */
   unsigned int & getSizeDim3();
+
+  /**
+   * @brief Return the first goal coordinate defined by the user
+   * before applying the heading mode
+   * @return Coordinate to the first goal
+   */
+  Coordinates getInitialGoalCoordinate();
 
 protected:
   /**
@@ -250,11 +265,10 @@ protected:
    */
   void clearStart();
 
-  int _timing_interval = 5000;
-
   bool _traverse_unknown;
   int _max_iterations;
   int _max_on_approach_iterations;
+  int _terminal_checking_interval;
   double _max_planning_time;
   float _tolerance;
   unsigned int _x_size;
@@ -262,9 +276,10 @@ protected:
   unsigned int _dim3_size;
   SearchInfo _search_info;
 
-  Coordinates _goal_coordinates;
+  CoordinateVector _goals_coordinates;
   NodePtr _start;
-  NodePtr _goal;
+  NodeSet _goalsSet;
+  GoalHeadingMode _goal_heading_mode;
 
   Graph _graph;
   NodeQueue _queue;
