@@ -127,6 +127,7 @@ TEST(SmacTest, test_smac_se2_reconfigure)
       rclcpp::Parameter("test.motion_model_for_search", std::string("REEDS_SHEPP")),
       rclcpp::Parameter("test.goal_heading_mode", std::string("BIDIRECTIONAL"))});
 
+
   rclcpp::spin_until_future_complete(
     nodeSE2->get_node_base_interface(),
     results);
