@@ -296,9 +296,15 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
 
   // Check if ending point is valid
   if (getToleranceHeuristic() < 0.001) {
-    // if any goal is valid, then all goals are valid
-    auto goal = *_goalsSet.begin();
-    if (!goal->isNodeValid(_traverse_unknown, _collision_checker)) {
+    // if a node is not valid, prune it from the goals set
+    for (auto it = _goalsSet.begin(); it != _goalsSet.end(); ) {
+      if (!(*it)->isNodeValid(_traverse_unknown, _collision_checker)) {
+        it = _goalsSet.erase(it);
+      } else {
+        ++it;
+      }
+    }
+    if (_goalsSet.empty()) {
       throw nav2_core::GoalOccupied("Goal was in lethal cost");
     }
   }
