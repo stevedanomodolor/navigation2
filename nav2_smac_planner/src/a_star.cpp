@@ -482,8 +482,9 @@ float AStarAlgorithm<NodeT>::getHeuristicCost(const NodePtr & node)
 {
   const Coordinates node_coords =
     NodeT::getCoords(node->getIndex(), getSizeX(), getSizeDim3());
-  // Heurittic cost for more than one goal is already cotemplated in the
-  // precomputation stage
+  // The heuristic cost utilizes the initial goal coordinate for potential nodes
+  // according to the goal heading mode because we already consider the goal
+  // heading mode during heuristic precomputation.
   float heuristic = NodeT::getHeuristicCost(node_coords, getInitialGoalCoordinate());
   if (heuristic < _best_heuristic_node.first) {
     _best_heuristic_node = {heuristic, node->getIndex()};
@@ -559,7 +560,7 @@ void AStarAlgorithm<NodeT>::clearStart()
 
 
 template<typename NodeT>
-typename AStarAlgorithm<NodeT>::Coordinates AStarAlgorithm<NodeT>::getInitialGoalCoordinate()
+const typename AStarAlgorithm<NodeT>::Coordinates & AStarAlgorithm<NodeT>::getInitialGoalCoordinate()
 {
   return _goals_coordinates[0];
 }

@@ -200,7 +200,7 @@ public:
    * before applying the heading mode
    * @return Coordinate to the first goal
    */
-  Coordinates getInitialGoalCoordinate();
+  const Coordinates & getInitialGoalCoordinate();
 
 protected:
   /**
