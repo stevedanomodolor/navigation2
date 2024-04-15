@@ -138,28 +138,32 @@ typename AStarAlgorithm<NodeT>::NodePtr AStarAlgorithm<NodeT>::addToGraph(
 
 template<>
 void AStarAlgorithm<Node2D>::setStart(
-  const unsigned int & mx,
-  const unsigned int & my,
+  const float & mx,
+  const float & my,
   const unsigned int & dim_3)
 {
   if (dim_3 != 0) {
     throw std::runtime_error("Node type Node2D cannot be given non-zero starting dim 3.");
   }
-  _start = addToGraph(Node2D::getIndex(mx, my, getSizeX()));
+  _start = addToGraph(
+    Node2D::getIndex(
+      static_cast<unsigned int>(mx),
+      static_cast<unsigned int>(my),
+      getSizeX()));
 }
 
 template<typename NodeT>
 void AStarAlgorithm<NodeT>::setStart(
-  const unsigned int & mx,
-  const unsigned int & my,
+  const float & mx,
+  const float & my,
   const unsigned int & dim_3)
 {
-  _start = addToGraph(NodeT::getIndex(mx, my, dim_3));
-  _start->setPose(
-    Coordinates(
-      static_cast<float>(mx),
-      static_cast<float>(my),
-      static_cast<float>(dim_3)));
+  _start = addToGraph(
+    NodeT::getIndex(
+      static_cast<unsigned int>(mx),
+      static_cast<unsigned int>(my),
+      dim_3));
+  _start->setPose(Coordinates(mx, my, dim_3));
 }
 
 template<>
@@ -188,8 +192,8 @@ void AStarAlgorithm<NodeT>::populateExpansionsLog(
 
 template<>
 void AStarAlgorithm<Node2D>::setGoal(
-  const unsigned int & mx,
-  const unsigned int & my,
+  const float & mx,
+  const float & my,
   const unsigned int & dim_3)
 {
   if (dim_3 != 0) {
@@ -197,15 +201,15 @@ void AStarAlgorithm<Node2D>::setGoal(
   }
   _goals_coordinates.clear();
   _goalsSet.clear();
-
   _goalsSet.insert(addToGraph(Node2D::getIndex(mx, my, getSizeX())));
   _goals_coordinates.push_back(Node2D::Coordinates(mx, my));
+
 }
 
 template<typename NodeT>
 void AStarAlgorithm<NodeT>::setGoal(
-  const unsigned int & mx,
-  const unsigned int & my,
+  const float & mx,
+  const float & my,
   const unsigned int & dim_3)
 {
   _goalsSet.clear();
@@ -429,7 +433,7 @@ bool AStarAlgorithm<NodeT>::createPath(
   }
 
   if (_best_heuristic_node.first < getToleranceHeuristic()) {
-    // If we run out of serach options, return the path that is closest, if within tolerance.
+    // If we run out of search options, return the path that is closest, if within tolerance.
     return _graph.at(_best_heuristic_node.second).backtracePath(path);
   }
 
