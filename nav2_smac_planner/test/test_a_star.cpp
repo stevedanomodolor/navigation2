@@ -132,7 +132,7 @@ TEST(AStarTest, test_a_star_2d)
 
   EXPECT_TRUE(a_star_2.getStart() != nullptr);
   EXPECT_TRUE(!a_star_2.getGoals().empty());
-  EXPECT_TRUE(a_star_2.getGoals().size() == 1);
+  EXPECT_EQ(a_star_2.getGoals().size(), 1);
   EXPECT_EQ(a_star_2.getSizeX(), 100u);
   EXPECT_EQ(a_star_2.getSizeY(), 100u);
   EXPECT_EQ(a_star_2.getSizeDim3(), 1u);
@@ -404,8 +404,8 @@ TEST(AStarTest, test_goal_heading_mode)
 
   EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker, expansions.get()));
 
-  EXPECT_TRUE(a_star.getGoals().size() == 2);
-  EXPECT_TRUE(a_star.getInitialGoalCoordinate().theta == 40u);
+  EXPECT_EQ(a_star.getGoals().size(), 2);
+  EXPECT_EQ(a_star.getInitialGoalCoordinate().theta, 40u);
 
 
   // ALL_DIRECTION goal heading mode
@@ -420,9 +420,8 @@ TEST(AStarTest, test_goal_heading_mode)
   unsigned int num_bins = nav2_smac_planner::NodeHybrid::motion_table.num_angle_quantization;
   EXPECT_TRUE(a_star.getGoals().size() == num_bins);
   // first goal should be the same the one set by the user
-  EXPECT_TRUE(a_star.getInitialGoalCoordinate().theta == 40u);
+  EXPECT_EQ(a_star.getInitialGoalCoordinate().theta, 40u);
   EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker, expansions.get()));
-
 
 }
 

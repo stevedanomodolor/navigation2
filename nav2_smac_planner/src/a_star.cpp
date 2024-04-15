@@ -240,18 +240,8 @@ void AStarAlgorithm<NodeT>::setGoal(
           static_cast<float>(dim_3_half_bin)));
       break;
     case GoalHeadingMode::ALL_DIRECTION:
-      // Add all possible headings as goals
-      // set first goal to be the same as the input
-      goals.push_back(addToGraph(NodeT::getIndex(mx, my, dim_3)));
-      goals_coordinates.push_back(
-        typename NodeT::Coordinates(
-          static_cast<float>(mx),
-          static_cast<float>(my),
-          static_cast<float>(dim_3)));
+      // Add all goals for each direction
       for (unsigned int i = 0; i < num_bins; ++i) {
-        if (i == dim_3) {
-          continue;
-        }
         goals.push_back(addToGraph(NodeT::getIndex(mx, my, i)));
         goals_coordinates.push_back(
           typename NodeT::Coordinates(
@@ -265,7 +255,9 @@ void AStarAlgorithm<NodeT>::setGoal(
       break;
   }
 
-  if (!_search_info.cache_obstacle_heuristic || goals_coordinates != _goals_coordinates) {
+  // we just have to check whether the x and y are the same because the dim3 is not used
+    // in the computation of the obstacle heuristic
+  if (!_search_info.cache_obstacle_heuristic || (goals_coordinates[0].x == _goals_coordinates[0].x && goals_coordinates[0].y == _goals_coordinates[0].y)) {
     if (!_start) {
       throw std::runtime_error("Start must be set before goal.");
     }
@@ -300,6 +292,7 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
     for (auto it = _goalsSet.begin(); it != _goalsSet.end(); ) {
       if (!(*it)->isNodeValid(_traverse_unknown, _collision_checker)) {
         it = _goalsSet.erase(it);
+        _goals_coordinates.erase(_goals_coordinates.begin() + std::distance(_goalsSet.begin(), it));
       } else {
         ++it;
       }
@@ -392,6 +385,7 @@ bool AStarAlgorithm<NodeT>::createPath(
     current_node->visited();
 
     // 2.1) Use an analytic expansion (if available) to generate a path
+    // todo -> remove the getInitialGoalCoordinate() function
     expansion_result = nullptr;
     expansion_result = _expander->tryAnalyticExpansion(
       current_node, getGoals(),
@@ -482,9 +476,7 @@ float AStarAlgorithm<NodeT>::getHeuristicCost(const NodePtr & node)
 {
   const Coordinates node_coords =
     NodeT::getCoords(node->getIndex(), getSizeX(), getSizeDim3());
-  // The heuristic cost utilizes the initial goal coordinate for potential nodes
-  // according to the goal heading mode because we already consider the goal
-  // heading mode during heuristic precomputation.
+  // TODO: remove the getInitialGoalCoordinate() function
   float heuristic = NodeT::getHeuristicCost(node_coords, getInitialGoalCoordinate());
   if (heuristic < _best_heuristic_node.first) {
     _best_heuristic_node = {heuristic, node->getIndex()};
@@ -559,11 +551,12 @@ void AStarAlgorithm<NodeT>::clearStart()
 }
 
 
-template<typename NodeT>
-const typename AStarAlgorithm<NodeT>::Coordinates & AStarAlgorithm<NodeT>::getInitialGoalCoordinate()
-{
-  return _goals_coordinates[0];
-}
+// template<typename NodeT>
+// const typename AStarAlgorithm<NodeT>::Coordinates &
+// AStarAlgorithm<NodeT>::getInitialGoalCoordinate()
+// {
+//   return _goals_coordinates[0];
+// }
 
 // Instantiate algorithm for the supported template types
 template class AStarAlgorithm<Node2D>;

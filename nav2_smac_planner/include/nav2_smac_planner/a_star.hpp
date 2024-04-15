@@ -94,6 +94,9 @@ public:
    * or planning time exceeded
    * @param max_planning_time Maximum time (in seconds) to wait for a plan, createPath returns
    * false after this timeout
+   * @param lookup_table_size Size of the lookup table to store heuristic values
+   * @param dim_3_size Number of quantization bins
+   * @param goal_heading_mode Heading mode for goal heading
    */
   void initialize(
     const bool & allow_unknown,
@@ -161,7 +164,7 @@ public:
 
   /**
    * @brief Get pointer reference to goal node
-   * @return Node pointer reference to goal node
+   * @return unordered_set of node pointers reference to the goal nodes
    */
   NodeSet & getGoals();
 
@@ -195,12 +198,14 @@ public:
    */
   unsigned int & getSizeDim3();
 
-  /**
-   * @brief Return the first goal coordinate defined by the user
-   * before applying the heading mode
-   * @return Coordinate to the first goal
-   */
-  const Coordinates & getInitialGoalCoordinate();
+  // todo: remove getInitialGoalCoordinate
+
+  // /**
+  //  * @brief Return the first goal coordinate defined by the user
+  //  * before applying the heading mode
+  //  * @return Coordinate to the first goal
+  //  */
+  // const Coordinates & getInitialGoalCoordinate();
 
 protected:
   /**

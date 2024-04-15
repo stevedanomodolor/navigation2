@@ -410,14 +410,14 @@ public:
   bool backtracePath(CoordinateVector & path);
 
   /**
-   * \brief add node to the path
-   * \param current_node
+   * @brief add node to the path
+   * @param current_node
    */
   void addNodeToPath(NodePtr current_node, CoordinateVector & path);
 
   /**
-   * \brief Sets the goal mode for the current search
-   * \param goal_heading_mode The goal heading mode to use
+   * @brief Sets the goal mode for the current search
+   * @param goal_heading_mode The goal heading mode to use
    */
   static void setGoalHeadingMode(const GoalHeadingMode & current_goal_heading_mode);
 
