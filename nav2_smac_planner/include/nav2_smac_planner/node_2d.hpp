@@ -227,7 +227,7 @@ public:
    */
   static float getHeuristicCost(
     const Coordinates & node_coords,
-    const Coordinates & goal_coordinates);
+    const CoordinateVector & goals_coords);
 
   /**
    * @brief Initialize the neighborhood to be used in A*

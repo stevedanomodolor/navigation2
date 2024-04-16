@@ -37,6 +37,7 @@ public:
   typedef NodeT * NodePtr;
   typedef std::unordered_set<NodePtr> NodeSet;
   typedef typename NodeT::Coordinates Coordinates;
+  typedef typename NodeT::CoordinateVector CoordinateVector;
   typedef std::function<bool (const unsigned int &, NodeT * &)> NodeGetter;
 
   /**
@@ -92,7 +93,7 @@ public:
   NodePtr tryAnalyticExpansion(
     const NodePtr & current_node,
     const NodeSet & goals_node,
-    const Coordinates & initial_goal_coords,
+    const CoordinateVector & goals_coords,
     const NodeGetter & getter, int & iterations, int & best_cost);
 
   /**

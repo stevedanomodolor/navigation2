@@ -376,7 +376,7 @@ TEST(AStarTest, test_goal_heading_mode)
   // BIDIRECTIONAL goal heading mode
   a_star.initialize(
     false, max_iterations, it_on_approach, terminal_checking_interval,
-    max_planning_time, 401, size_theta, nav2_smac_planner::GoalHeadingMode::BIDIRECTIONAL);
+    max_planning_time, 401, size_theta);
 
   nav2_costmap_2d::Costmap2D * costmapA =
     new nav2_costmap_2d::Costmap2D(100, 100, 0.1, 0.0, 0.0, 0);
@@ -405,13 +405,13 @@ TEST(AStarTest, test_goal_heading_mode)
   EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker, expansions.get()));
 
   EXPECT_EQ(a_star.getGoals().size(), 2);
-  EXPECT_EQ(a_star.getInitialGoalCoordinate().theta, 40u);
+  EXPECT_EQ(a_star.getGoals().size(), a_star.getGoalsCoordinates().size());
 
 
   // ALL_DIRECTION goal heading mode
   a_star.initialize(
     false, max_iterations, it_on_approach, terminal_checking_interval,
-    max_planning_time, 401, size_theta, nav2_smac_planner::GoalHeadingMode::ALL_DIRECTION);
+    max_planning_time, 401, size_theta);
 
   a_star.setCollisionChecker(checker.get());
   a_star.setStart(10u, 10u, 0u);
@@ -419,10 +419,9 @@ TEST(AStarTest, test_goal_heading_mode)
 
   unsigned int num_bins = nav2_smac_planner::NodeHybrid::motion_table.num_angle_quantization;
   EXPECT_TRUE(a_star.getGoals().size() == num_bins);
+  EXPECT_EQ(a_star.getGoals().size(), a_star.getGoalsCoordinates().size());
   // first goal should be the same the one set by the user
-  EXPECT_EQ(a_star.getInitialGoalCoordinate().theta, 40u);
   EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker, expansions.get()));
-
 }
 
 TEST(AStarTest, test_constants)

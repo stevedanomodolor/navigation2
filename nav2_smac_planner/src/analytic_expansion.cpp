@@ -48,7 +48,7 @@ void AnalyticExpansion<NodeT>::setCollisionChecker(
 
 template<typename NodeT>
 typename AnalyticExpansion<NodeT>::NodePtr AnalyticExpansion<NodeT>::tryAnalyticExpansion(
-  const NodePtr & current_node, const NodeSet & goals_node, const Coordinates & initial_goal_coords,
+  const NodePtr & current_node, const NodeSet & goals_node, const CoordinateVector & goals_coords,
   const NodeGetter & getter, int & analytic_iterations,
   int & closest_distance)
 {
@@ -67,7 +67,7 @@ typename AnalyticExpansion<NodeT>::NodePtr AnalyticExpansion<NodeT>::tryAnalytic
     NodePtr current_best_node = nullptr;
     closest_distance = std::min(
       closest_distance,
-      static_cast<int>(NodeT::getHeuristicCost(node_coords, initial_goal_coords)));
+      static_cast<int>(NodeT::getHeuristicCost(node_coords, goals_coords)));
     // We want to expand at a rate of d/expansion_ratio,
     // but check to see if we are so close that we would be expanding every iteration
     // If so, limit it to the expansion ratio (rounded up)
@@ -375,7 +375,7 @@ typename AnalyticExpansion<Node2D>::NodePtr AnalyticExpansion<Node2D>::setAnalyt
 
 template<>
 typename AnalyticExpansion<Node2D>::NodePtr AnalyticExpansion<Node2D>::tryAnalyticExpansion(
-  const NodePtr & current_node, const NodeSet & goals_node, const Coordinates & initial_goal_coords,
+  const NodePtr & current_node, const NodeSet & goals_node, const CoordinateVector & goals_coords,
   const NodeGetter & getter, int & analytic_iterations,
   int & closest_distance)
 {

@@ -213,8 +213,7 @@ void SmacPlannerLattice::configure(
     _terminal_checking_interval,
     _max_planning_time,
     lookup_table_dim,
-    _metadata.number_of_headings,
-    _goal_heading_mode);
+    _metadata.number_of_headings);
 
   // Initialize path smoother
   if (smooth_path) {
@@ -314,7 +313,8 @@ nav_msgs::msg::Path SmacPlannerLattice::createPlan(
   }
   _a_star->setGoal(
     mx, my,
-    NodeLattice::motion_table.getClosestAngularBin(tf2::getYaw(goal.pose.orientation)));
+    NodeLattice::motion_table.getClosestAngularBin(tf2::getYaw(goal.pose.orientation)),
+    _goal_heading_mode);
 
   // Setup message
   nav_msgs::msg::Path plan;
@@ -565,7 +565,6 @@ SmacPlannerLattice::dynamicParametersCallback(std::vector<rclcpp::Parameter> par
             "Valid options are DEFAULT, BIDIRECTIONAL, ALL_DIRECTION. ",
             goal_heading_type.c_str());
         } else {
-          reinit_a_star = true;
           _goal_heading_mode = goal_heading_mode;
         }
       }
@@ -612,8 +611,7 @@ SmacPlannerLattice::dynamicParametersCallback(std::vector<rclcpp::Parameter> par
         _terminal_checking_interval,
         _max_planning_time,
         lookup_table_dim,
-        _metadata.number_of_headings,
-        _goal_heading_mode);
+        _metadata.number_of_headings);
     }
   }
 

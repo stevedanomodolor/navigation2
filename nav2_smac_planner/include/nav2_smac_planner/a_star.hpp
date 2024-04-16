@@ -105,8 +105,7 @@ public:
     const int & terminal_checking_interval,
     const double & max_planning_time,
     const float & lookup_table_size,
-    const unsigned int & dim_3_size,
-    const GoalHeadingMode & goal_heading_mode = GoalHeadingMode::DEFAULT);
+    const unsigned int & dim_3_size);
 
   /**
    * @brief Creating path from given costmap, start, and goal
@@ -137,7 +136,8 @@ public:
   void setGoal(
     const float & mx,
     const float & my,
-    const unsigned int & dim_3);
+    const unsigned int & dim_3,
+    const GoalHeadingMode & goal_heading_mode = GoalHeadingMode::DEFAULT);
 
   /**
    * @brief Set the starting pose for planning, as a node index
@@ -163,10 +163,16 @@ public:
   NodePtr & getStart();
 
   /**
-   * @brief Get pointer reference to goal node
-   * @return unordered_set of node pointers reference to the goal nodes
+   * @brief Get pointer reference to goals node
+   * @return unordered_set of node pointers reference to the goals nodes
    */
   NodeSet & getGoals();
+
+  /**
+   * @brief Get pointer reference to goals coordinates
+   * @return vector of goals coordinates
+   */
+  CoordinateVector & goalGoalsCoordinates();
 
   /**
    * @brief Get maximum number of on-approach iterations after within threshold
@@ -197,15 +203,6 @@ public:
    * @return Number of angle bins / Z dimension
    */
   unsigned int & getSizeDim3();
-
-  // todo: remove getInitialGoalCoordinate
-
-  // /**
-  //  * @brief Return the first goal coordinate defined by the user
-  //  * before applying the heading mode
-  //  * @return Coordinate to the first goal
-  //  */
-  // const Coordinates & getInitialGoalCoordinate();
 
 protected:
   /**
@@ -284,7 +281,6 @@ protected:
   CoordinateVector _goals_coordinates;
   NodePtr _start;
   NodeSet _goalsSet;
-  GoalHeadingMode _goal_heading_mode;
 
   Graph _graph;
   NodeQueue _queue;

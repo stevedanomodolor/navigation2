@@ -366,7 +366,7 @@ public:
    */
   static float getHeuristicCost(
     const Coordinates & node_coords,
-    const Coordinates & goal_coordinates);
+    const CoordinateVector & goals_coords);
 
   /**
    * @brief Initialize motion models
@@ -459,28 +459,23 @@ public:
    */
   bool backtracePath(CoordinateVector & path);
 
-  /**
-   * @brief Sets the goal mode for the current search
-   * @param goal_heading_mode The goal heading mode to use
-   */
-  static void setGoalHeadingMode(const GoalHeadingMode & current_goal_heading_mode);
-
   NodeHybrid * parent;
   Coordinates pose;
 
   // Constants required across all nodes but don't want to allocate more than once
-  static float travel_distance_cost;
+  static double travel_distance_cost;
   static HybridMotionTable motion_table;
   // Wavefront lookup and queue for continuing to expand as needed
   static LookupTable obstacle_heuristic_lookup_table;
   static ObstacleHeuristicQueue obstacle_heuristic_queue;
 
+  static nav2_costmap_2d::Costmap2D * sampled_costmap;
   static std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros;
   static std::shared_ptr<nav2_costmap_2d::InflationLayer> inflation_layer;
+  static CostmapDownsampler downsampler;
   // Dubin / Reeds-Shepp lookup and size for dereferencing
   static LookupTable dist_heuristic_lookup_table;
   static float size_lookup;
-  static GoalHeadingMode goal_heading_mode;
 
 private:
   float _cell_cost;

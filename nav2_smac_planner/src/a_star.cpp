@@ -63,16 +63,13 @@ void AStarAlgorithm<NodeT>::initialize(
   const int & terminal_checking_interval,
   const double & max_planning_time,
   const float & lookup_table_size,
-  const unsigned int & dim_3_size,
-  const GoalHeadingMode & goal_heading_mode)
+  const unsigned int & dim_3_size)
 {
   _traverse_unknown = allow_unknown;
   _max_iterations = max_iterations;
   _max_on_approach_iterations = max_on_approach_iterations;
   _terminal_checking_interval = terminal_checking_interval;
   _max_planning_time = max_planning_time;
-  _goal_heading_mode = goal_heading_mode;
-  NodeT::setGoalHeadingMode(_goal_heading_mode);
   NodeT::precomputeDistanceHeuristic(
     lookup_table_size, _motion_model, dim_3_size, _search_info);
   _dim3_size = dim_3_size;
@@ -88,15 +85,13 @@ void AStarAlgorithm<Node2D>::initialize(
   const int & terminal_checking_interval,
   const double & max_planning_time,
   const float & /*lookup_table_size*/,
-  const unsigned int & dim_3_size,
-  const GoalHeadingMode & goal_heading_mode)
+  const unsigned int & dim_3_size)
 {
   _traverse_unknown = allow_unknown;
   _max_iterations = max_iterations;
   _max_on_approach_iterations = max_on_approach_iterations;
   _terminal_checking_interval = terminal_checking_interval;
   _max_planning_time = max_planning_time;
-  _goal_heading_mode = goal_heading_mode;
 
   if (dim_3_size != 1) {
     throw std::runtime_error("Node type Node2D cannot be given non-1 dim 3 quantization.");
@@ -194,7 +189,8 @@ template<>
 void AStarAlgorithm<Node2D>::setGoal(
   const float & mx,
   const float & my,
-  const unsigned int & dim_3)
+  const unsigned int & dim_3,
+  const GoalHeadingMode & goal_heading_mode)
 {
   if (dim_3 != 0) {
     throw std::runtime_error("Node type Node2D cannot be given non-zero goal dim 3.");
@@ -203,21 +199,21 @@ void AStarAlgorithm<Node2D>::setGoal(
   _goalsSet.clear();
   _goalsSet.insert(addToGraph(Node2D::getIndex(mx, my, getSizeX())));
   _goals_coordinates.push_back(Node2D::Coordinates(mx, my));
-
 }
 
 template<typename NodeT>
 void AStarAlgorithm<NodeT>::setGoal(
   const float & mx,
   const float & my,
-  const unsigned int & dim_3)
+  const unsigned int & dim_3,
+  const GoalHeadingMode & goal_heading_mode)
 {
   _goalsSet.clear();
   NodeVector goals;
   CoordinateVector goals_coordinates;
   unsigned int num_bins = NodeT::motion_table.num_angle_quantization;
   unsigned int dim_3_half_bin = 0;
-  switch (_goal_heading_mode) {
+  switch (goal_heading_mode) {
     case GoalHeadingMode::DEFAULT:
       goals.push_back(addToGraph(NodeT::getIndex(mx, my, dim_3)));
       goals_coordinates.push_back(
@@ -260,8 +256,11 @@ void AStarAlgorithm<NodeT>::setGoal(
   }
 
   // we just have to check whether the x and y are the same because the dim3 is not used
-    // in the computation of the obstacle heuristic
-  if (!_search_info.cache_obstacle_heuristic || (goals_coordinates[0].x == _goals_coordinates[0].x && goals_coordinates[0].y == _goals_coordinates[0].y)) {
+  // in the computation of the obstacle heuristic
+  if (!_search_info.cache_obstacle_heuristic ||
+    (goals_coordinates[0].x == _goals_coordinates[0].x &&
+    goals_coordinates[0].y == _goals_coordinates[0].y))
+  {
     if (!_start) {
       throw std::runtime_error("Start must be set before goal.");
     }
@@ -328,6 +327,9 @@ bool AStarAlgorithm<NodeT>::createPath(
     return false;
   }
 
+  // compute min distance heuristic to goal
+
+
   // 0) Add starting point to the open set
   addNode(0.0, getStart());
   getStart()->setAccumulatedCost(0.0);
@@ -389,11 +391,10 @@ bool AStarAlgorithm<NodeT>::createPath(
     current_node->visited();
 
     // 2.1) Use an analytic expansion (if available) to generate a path
-    // todo -> remove the getInitialGoalCoordinate() function
     expansion_result = nullptr;
     expansion_result = _expander->tryAnalyticExpansion(
       current_node, getGoals(),
-      getInitialGoalCoordinate(), neighborGetter, analytic_iterations, closest_distance);
+      goalGoalsCoordinates(), neighborGetter, analytic_iterations, closest_distance);
     if (expansion_result != nullptr) {
       current_node = expansion_result;
     }
@@ -480,8 +481,7 @@ float AStarAlgorithm<NodeT>::getHeuristicCost(const NodePtr & node)
 {
   const Coordinates node_coords =
     NodeT::getCoords(node->getIndex(), getSizeX(), getSizeDim3());
-  // TODO: remove the getInitialGoalCoordinate() function
-  float heuristic = NodeT::getHeuristicCost(node_coords, getInitialGoalCoordinate());
+  float heuristic = NodeT::getHeuristicCost(node_coords, goalGoalsCoordinates());
   if (heuristic < _best_heuristic_node.first) {
     _best_heuristic_node = {heuristic, node->getIndex()};
   }
@@ -554,13 +554,11 @@ void AStarAlgorithm<NodeT>::clearStart()
   _costmap->setCost(coords.x, coords.y, nav2_costmap_2d::FREE_SPACE);
 }
 
-
-// template<typename NodeT>
-// const typename AStarAlgorithm<NodeT>::Coordinates &
-// AStarAlgorithm<NodeT>::getInitialGoalCoordinate()
-// {
-//   return _goals_coordinates[0];
-// }
+template<typename NodeT>
+typename AStarAlgorithm<NodeT>::CoordinateVector & AStarAlgorithm<NodeT>::goalGoalsCoordinates()
+{
+  return _goals_coordinates;
+}
 
 // Instantiate algorithm for the supported template types
 template class AStarAlgorithm<Node2D>;

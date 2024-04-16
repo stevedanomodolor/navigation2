@@ -247,8 +247,7 @@ void SmacPlannerHybrid::configure(
     _terminal_checking_interval,
     _max_planning_time,
     _lookup_table_dim,
-    _angle_quantizations,
-    _goal_heading_mode);
+    _angle_quantizations);
 
   // Initialize path smoother
   if (smooth_path) {
@@ -402,7 +401,7 @@ nav_msgs::msg::Path SmacPlannerHybrid::createPlan(
     orientation_bin -= static_cast<float>(_angle_quantizations);
   }
   orientation_bin_id = static_cast<unsigned int>(floor(orientation_bin));
-  _a_star->setGoal(mx, my, orientation_bin_id);
+  _a_star->setGoal(mx, my, orientation_bin_id, _goal_heading_mode);
 
   // Setup message
   nav_msgs::msg::Path plan;
@@ -674,7 +673,6 @@ SmacPlannerHybrid::dynamicParametersCallback(std::vector<rclcpp::Parameter> para
             "Valid options are DEFAULT, BIDIRECTIONAL, ALL_DIRECTION. ",
             goal_heading_type.c_str());
         } else {
-          reinit_a_star = true;
           _goal_heading_mode = goal_heading_mode;
         }
       }
@@ -717,8 +715,7 @@ SmacPlannerHybrid::dynamicParametersCallback(std::vector<rclcpp::Parameter> para
         _terminal_checking_interval,
         _max_planning_time,
         _lookup_table_dim,
-        _angle_quantizations,
-        _goal_heading_mode);
+        _angle_quantizations);
     }
 
     // Re-Initialize costmap downsampler
