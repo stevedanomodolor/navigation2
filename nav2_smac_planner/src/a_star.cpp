@@ -70,8 +70,7 @@ void AStarAlgorithm<NodeT>::initialize(
   _max_on_approach_iterations = max_on_approach_iterations;
   _terminal_checking_interval = terminal_checking_interval;
   _max_planning_time = max_planning_time;
-  NodeT::precomputeDistanceHeuristic(
-    lookup_table_size, _motion_model, dim_3_size, _search_info);
+  NodeT::precomputeDistanceHeuristic(lookup_table_size, _motion_model, dim_3_size, _search_info);
   _dim3_size = dim_3_size;
   _expander = std::make_unique<AnalyticExpansion<NodeT>>(
     _motion_model, _search_info, _traverse_unknown, _dim3_size);
@@ -258,8 +257,8 @@ void AStarAlgorithm<NodeT>::setGoal(
   // we just have to check whether the x and y are the same because the dim3 is not used
   // in the computation of the obstacle heuristic
   if (!_search_info.cache_obstacle_heuristic ||
-    (goals_coordinates[0].x == _goals_coordinates[0].x &&
-    goals_coordinates[0].y == _goals_coordinates[0].y))
+    (goals_coordinates[0].x != _goals_coordinates[0].x &&
+    goals_coordinates[0].y != _goals_coordinates[0].y))
   {
     if (!_start) {
       throw std::runtime_error("Start must be set before goal.");
@@ -327,9 +326,6 @@ bool AStarAlgorithm<NodeT>::createPath(
     return false;
   }
 
-  // compute min distance heuristic to goal
-
-
   // 0) Add starting point to the open set
   addNode(0.0, getStart());
   getStart()->setAccumulatedCost(0.0);
@@ -394,7 +390,7 @@ bool AStarAlgorithm<NodeT>::createPath(
     expansion_result = nullptr;
     expansion_result = _expander->tryAnalyticExpansion(
       current_node, getGoals(),
-      goalGoalsCoordinates(), neighborGetter, analytic_iterations, closest_distance);
+      getGoalsCoordinates(), neighborGetter, analytic_iterations, closest_distance);
     if (expansion_result != nullptr) {
       current_node = expansion_result;
     }
@@ -481,7 +477,7 @@ float AStarAlgorithm<NodeT>::getHeuristicCost(const NodePtr & node)
 {
   const Coordinates node_coords =
     NodeT::getCoords(node->getIndex(), getSizeX(), getSizeDim3());
-  float heuristic = NodeT::getHeuristicCost(node_coords, goalGoalsCoordinates());
+  float heuristic = NodeT::getHeuristicCost(node_coords, getGoalsCoordinates());
   if (heuristic < _best_heuristic_node.first) {
     _best_heuristic_node = {heuristic, node->getIndex()};
   }
@@ -555,7 +551,7 @@ void AStarAlgorithm<NodeT>::clearStart()
 }
 
 template<typename NodeT>
-typename AStarAlgorithm<NodeT>::CoordinateVector & AStarAlgorithm<NodeT>::goalGoalsCoordinates()
+typename AStarAlgorithm<NodeT>::CoordinateVector & AStarAlgorithm<NodeT>::getGoalsCoordinates()
 {
   return _goals_coordinates;
 }

@@ -82,8 +82,7 @@ public:
    * @brief Attempt an analytic path completion
    * @param node The node to start the analytic path from
    * @param goals_node set of goals node to plan to
-   * @param initial_goal_coords The coordinates of the initial goal node before goal heading
-   * was applied
+   * @param goals_coords vector of goal coordinates to plan to
    * @param getter Gets a node at a set of coordinates
    * @param iterations Iterations to run over
    * @param best_cost Best heuristic cost to propertionally expand more closer to the goal

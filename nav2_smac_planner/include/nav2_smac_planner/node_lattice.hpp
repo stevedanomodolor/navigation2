@@ -415,7 +415,6 @@ public:
    */
   void addNodeToPath(NodePtr current_node, CoordinateVector & path);
 
-
   NodeLattice * parent;
   Coordinates pose;
   static LatticeMotionTable motion_table;

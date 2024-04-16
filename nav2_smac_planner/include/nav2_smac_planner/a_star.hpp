@@ -170,9 +170,9 @@ public:
 
   /**
    * @brief Get pointer reference to goals coordinates
-   * @return vector of goals coordinates
+   * @return vector of goals coordinates reference to the goals coordinates
    */
-  CoordinateVector & goalGoalsCoordinates();
+  CoordinateVector & getGoalsCoordinates();
 
   /**
    * @brief Get maximum number of on-approach iterations after within threshold
@@ -266,6 +266,7 @@ protected:
    * @brief Clear Start
    */
   void clearStart();
+
 
   bool _traverse_unknown;
   int _max_iterations;
