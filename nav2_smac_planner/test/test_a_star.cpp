@@ -393,7 +393,7 @@ TEST(AStarTest, test_goal_heading_mode)
 
   a_star.setCollisionChecker(checker.get());
   a_star.setStart(10u, 10u, 0u);
-  a_star.setGoal(80u, 80u, 40u);
+  a_star.setGoal(80u, 80u, 40u, nav2_smac_planner::GoalHeadingMode::BIDIRECTIONAL);
   nav2_smac_planner::NodeHybrid::CoordinateVector path;
   std::unique_ptr<std::vector<std::tuple<float, float, float>>> expansions = nullptr;
   expansions = std::make_unique<std::vector<std::tuple<float, float, float>>>();
@@ -415,7 +415,7 @@ TEST(AStarTest, test_goal_heading_mode)
 
   a_star.setCollisionChecker(checker.get());
   a_star.setStart(10u, 10u, 0u);
-  a_star.setGoal(80u, 80u, 40u);
+  a_star.setGoal(80u, 80u, 40u, nav2_smac_planner::GoalHeadingMode::ALL_DIRECTION);
 
   unsigned int num_bins = nav2_smac_planner::NodeHybrid::motion_table.num_angle_quantization;
   EXPECT_TRUE(a_star.getGoals().size() == num_bins);

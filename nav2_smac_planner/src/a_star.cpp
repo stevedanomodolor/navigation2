@@ -275,6 +275,20 @@ void AStarAlgorithm<NodeT>::setGoal(
   }
 }
 
+template<>
+void AStarAlgorithm<Node2D>::clearStart()
+{
+  auto coords = Node2D::getCoords(_start->getIndex());
+  _costmap->setCost(coords.x, coords.y, nav2_costmap_2d::FREE_SPACE);
+}
+
+template<typename NodeT>
+void AStarAlgorithm<NodeT>::clearStart()
+{
+  auto coords = NodeT::getCoords(_start->getIndex(), _costmap->getSizeInCellsX(), getSizeDim3());
+  _costmap->setCost(coords.x, coords.y, nav2_costmap_2d::FREE_SPACE);
+}
+
 template<typename NodeT>
 bool AStarAlgorithm<NodeT>::areInputsValid()
 {
@@ -287,14 +301,16 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
   if (!_start || _goalsSet.empty()) {
     throw std::runtime_error("Failed to compute path, no valid start or goal given.");
   }
-
   // Check if ending point is valid
   if (getToleranceHeuristic() < 0.001) {
     // if a node is not valid, prune it from the goals set
     for (auto it = _goalsSet.begin(); it != _goalsSet.end(); ) {
       if (!(*it)->isNodeValid(_traverse_unknown, _collision_checker)) {
+        _goals_coordinates.erase(
+          std::remove(
+            _goals_coordinates.begin(), _goals_coordinates.end(), (*it)->pose),
+          _goals_coordinates.end());
         it = _goalsSet.erase(it);
-        _goals_coordinates.erase(_goals_coordinates.begin() + std::distance(_goalsSet.begin(), it));
       } else {
         ++it;
       }
@@ -309,6 +325,33 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
 
   return true;
 }
+
+template<>
+bool AStarAlgorithm<Node2D>::areInputsValid()
+{
+  // Check if graph was filled in
+  if (_graph.empty()) {
+    throw std::runtime_error("Failed to compute path, no costmap given.");
+  }
+
+  // Check if points were filled in
+  if (!_start || _goalsSet.empty()) {
+    throw std::runtime_error("Failed to compute path, no valid start or goal given.");
+  }
+  // Check if ending point is valid
+  if (getToleranceHeuristic() < 0.001 &&
+    !(*(_goalsSet.begin()))->isNodeValid(_traverse_unknown, _collision_checker))
+  {
+    // if a node is not valid, prune it from the goals set
+    throw nav2_core::GoalOccupied("Goal was in lethal cost");
+  }
+
+  // Note: We do not check the if the start is valid because it is cleared
+  clearStart();
+
+  return true;
+}
+
 
 template<typename NodeT>
 bool AStarAlgorithm<NodeT>::createPath(
@@ -534,20 +577,6 @@ template<typename NodeT>
 unsigned int & AStarAlgorithm<NodeT>::getSizeDim3()
 {
   return _dim3_size;
-}
-
-template<>
-void AStarAlgorithm<Node2D>::clearStart()
-{
-  auto coords = Node2D::getCoords(_start->getIndex());
-  _costmap->setCost(coords.x, coords.y, nav2_costmap_2d::FREE_SPACE);
-}
-
-template<typename NodeT>
-void AStarAlgorithm<NodeT>::clearStart()
-{
-  auto coords = NodeT::getCoords(_start->getIndex(), _costmap->getSizeInCellsX(), getSizeDim3());
-  _costmap->setCost(coords.x, coords.y, nav2_costmap_2d::FREE_SPACE);
 }
 
 template<typename NodeT>
