@@ -96,7 +96,6 @@ public:
    * false after this timeout
    * @param lookup_table_size Size of the lookup table to store heuristic values
    * @param dim_3_size Number of quantization bins
-   * @param goal_heading_mode Heading mode for goal heading
    */
   void initialize(
     const bool & allow_unknown,
