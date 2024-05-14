@@ -197,7 +197,9 @@ void AStarAlgorithm<Node2D>::setGoal(
   _goals_coordinates.clear();
   _goalsSet.clear();
   _goalsSet.insert(addToGraph(Node2D::getIndex(mx, my, getSizeX())));
-  _goals_coordinates.push_back(Node2D::Coordinates(mx, my));
+  Node2D::Coordinates goal_coords = Node2D::Coordinates(mx, my);
+  (*_goalsSet.begin())->setPose(goal_coords);
+  _goals_coordinates.push_back(goal_coords);
 }
 
 template<typename NodeT>
@@ -275,20 +277,6 @@ void AStarAlgorithm<NodeT>::setGoal(
   }
 }
 
-template<>
-void AStarAlgorithm<Node2D>::clearStart()
-{
-  auto coords = Node2D::getCoords(_start->getIndex());
-  _costmap->setCost(coords.x, coords.y, nav2_costmap_2d::FREE_SPACE);
-}
-
-template<typename NodeT>
-void AStarAlgorithm<NodeT>::clearStart()
-{
-  auto coords = NodeT::getCoords(_start->getIndex(), _costmap->getSizeInCellsX(), getSizeDim3());
-  _costmap->setCost(coords.x, coords.y, nav2_costmap_2d::FREE_SPACE);
-}
-
 template<typename NodeT>
 bool AStarAlgorithm<NodeT>::areInputsValid()
 {
@@ -325,33 +313,6 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
 
   return true;
 }
-
-template<>
-bool AStarAlgorithm<Node2D>::areInputsValid()
-{
-  // Check if graph was filled in
-  if (_graph.empty()) {
-    throw std::runtime_error("Failed to compute path, no costmap given.");
-  }
-
-  // Check if points were filled in
-  if (!_start || _goalsSet.empty()) {
-    throw std::runtime_error("Failed to compute path, no valid start or goal given.");
-  }
-  // Check if ending point is valid
-  if (getToleranceHeuristic() < 0.001 &&
-    !(*(_goalsSet.begin()))->isNodeValid(_traverse_unknown, _collision_checker))
-  {
-    // if a node is not valid, prune it from the goals set
-    throw nav2_core::GoalOccupied("Goal was in lethal cost");
-  }
-
-  // Note: We do not check the if the start is valid because it is cleared
-  clearStart();
-
-  return true;
-}
-
 
 template<typename NodeT>
 bool AStarAlgorithm<NodeT>::createPath(
@@ -585,6 +546,13 @@ template<typename NodeT>
 typename AStarAlgorithm<NodeT>::CoordinateVector & AStarAlgorithm<NodeT>::getGoalsCoordinates()
 {
   return _goals_coordinates;
+}
+
+template<typename NodeT>
+void AStarAlgorithm<NodeT>::clearStart()
+{
+  auto coords = NodeT::getCoords(_start->getIndex(), _costmap->getSizeInCellsX(), getSizeDim3());
+  _costmap->setCost(coords.x, coords.y, nav2_costmap_2d::FREE_SPACE);
 }
 
 // Instantiate algorithm for the supported template types
