@@ -36,7 +36,7 @@ bool PathLongerOnApproach::isPathUpdated(
 {
   return new_path != old_path && old_path.poses.size() != 0 &&
          new_path.poses.size() != 0 &&
-         old_path.poses.back() == new_path.poses.back();
+         old_path.poses.back().pose == new_path.poses.back().pose;
 }
 
 bool PathLongerOnApproach::isRobotInGoalProximity(
@@ -63,7 +63,9 @@ inline BT::NodeStatus PathLongerOnApproach::tick()
   getInput("length_factor", length_factor_);
 
   if (first_time_ == false) {
-    if (old_path_.poses.back() != new_path_.poses.back()) {
+    if (old_path_.poses.empty() || new_path_.poses.empty() ||
+      old_path_.poses.back() != new_path_.poses.back())
+    {
       first_time_ = true;
     }
   }

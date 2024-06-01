@@ -1,6 +1,6 @@
 # Nav2
-[![GitHub Workflow Status](https://github.com/ros-planning/navigation2/actions/workflows/update_ci_image.yaml/badge.svg)](https://github.com/ros-planning/navigation2/actions/workflows/update_ci_image.yaml)
-[![codecov](https://codecov.io/gh/ros-planning/navigation2/branch/main/graph/badge.svg?token=S3iRmypwlg)](https://codecov.io/gh/ros-planning/navigation2)
+[![GitHub Workflow Status](https://github.com/ros-navigation/navigation2/actions/workflows/update_ci_image.yaml/badge.svg)](https://github.com/ros-navigation/navigation2/actions/workflows/update_ci_image.yaml)
+[![codecov](https://codecov.io/gh/ros-navigation/navigation2/branch/main/graph/badge.svg?token=S3iRmypwlg)](https://codecov.io/gh/ros-navigation/navigation2)
 
 <p align="center">
   <img height="300" src="doc/nav2_logo.png" />
@@ -15,7 +15,7 @@ For detailed instructions on how to:
 - [Configure](https://docs.nav2.org/configuration/index.html)
 - [Navigation Plugins](https://docs.nav2.org/plugins/index.html)
 - [Migration Guides](https://docs.nav2.org/migration/index.html)
-- [Container Images for Building Nav2](https://github.com/orgs/ros-planning/packages/container/package/navigation2)
+- [Container Images for Building Nav2](https://github.com/orgs/ros-navigation/packages/container/package/navigation2)
 - [Contribute](https://docs.nav2.org/development_guides/involvement_docs/index.html)
 
 Please visit our [documentation site](https://docs.nav2.org/). [Please visit our community Slack here](https://join.slack.com/t/navigation2/shared_invite/zt-hu52lnnq-cKYjuhTY~sEMbZXL8p9tOw) (if this link does not work, please contact maintainers to reactivate).
@@ -117,7 +117,7 @@ If you use the Regulated Pure Pursuit Controller algorithm or software from this
 | Service | Humble | Iron | Main |
 | :---: | :---: | :---: | :---: |
 | ROS Build Farm | [![Build Status](https://build.ros2.org/job/Hdev__navigation2__ubuntu_jammy_amd64/badge/icon)](https://build.ros2.org/job/Hdev__navigation2__ubuntu_jammy_amd64/) | [![Build Status](https://build.ros2.org/job/Idev__navigation2__ubuntu_jammy_amd64/badge/icon)](https://build.ros2.org/job/Idev__navigation2__ubuntu_jammy_amd64/) | N/A |
-| Circle CI | N/A | N/A | [![Build Status](https://circleci.com/gh/ros-planning/navigation2/tree/main.svg?style=svg)](https://circleci.com/gh/ros-planning/navigation2/tree/main) |
+| Circle CI | N/A | N/A | [![Build Status](https://circleci.com/gh/ros-navigation/navigation2/tree/main.svg?style=svg)](https://circleci.com/gh/ros-navigation/navigation2/tree/main) |
 
 
 | Package | Humble Source | Humble Debian | Iron Source | Iron Debian |
