@@ -403,8 +403,7 @@ nav_msgs::msg::Path SmacPlannerHybrid::createPlan(
   if (orientation_bin >= static_cast<float>(_angle_quantizations)) {
     orientation_bin -= static_cast<float>(_angle_quantizations);
   }
-  orientation_bin_id = static_cast<unsigned int>(floor(orientation_bin));
-  _a_star->setGoal(mx, my, orientation_bin_id, _goal_heading_mode);
+  _a_star->setGoal(mx, my, static_cast<unsigned int>(orientation_bin), _goal_heading_mode);
 
   // Setup message
   nav_msgs::msg::Path plan;

@@ -375,9 +375,9 @@ typename AnalyticExpansion<Node2D>::NodePtr AnalyticExpansion<Node2D>::setAnalyt
 
 template<>
 typename AnalyticExpansion<Node2D>::NodePtr AnalyticExpansion<Node2D>::tryAnalyticExpansion(
-  const NodePtr & current_node, const NodeSet & goals_node, const CoordinateVector & goals_coords,
-  const NodeGetter & getter, int & analytic_iterations,
-  int & closest_distance)
+  const NodePtr &, const NodeSet &, const CoordinateVector &,
+  const NodeGetter &, int &,
+  int &)
 {
   return NodePtr(nullptr);
 }

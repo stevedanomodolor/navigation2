@@ -195,6 +195,7 @@ void AStarAlgorithm<Node2D>::setGoal(
   const unsigned int & dim_3,
   const GoalHeadingMode & goal_heading_mode)
 {
+  (void) goal_heading_mode;
   if (dim_3 != 0) {
     throw std::runtime_error("Node type Node2D cannot be given non-zero goal dim 3.");
   }
@@ -232,7 +233,7 @@ void AStarAlgorithm<NodeT>::setGoal(
       goals.push_back(addToGraph(NodeT::getIndex(mx, my, dim_3)));
       // 180 degrees
       dim_3_half_bin = (dim_3 + (num_bins / 2)) % num_bins;
-      _goalsSet.insert(addToGraph(NodeT::getIndex(mx, my, dim_3_half_bin)));
+      goals.push_back(addToGraph(NodeT::getIndex(mx, my, dim_3_half_bin)));
       goals_coordinates.push_back(
         typename NodeT::Coordinates(
           static_cast<float>(mx),
@@ -548,13 +549,6 @@ template<typename NodeT>
 typename AStarAlgorithm<NodeT>::CoordinateVector & AStarAlgorithm<NodeT>::getGoalsCoordinates()
 {
   return _goals_coordinates;
-}
-
-template<typename NodeT>
-void AStarAlgorithm<NodeT>::clearStart()
-{
-  auto coords = NodeT::getCoords(_start->getIndex(), _costmap->getSizeInCellsX(), getSizeDim3());
-  _costmap->setCost(coords.x, coords.y, nav2_costmap_2d::FREE_SPACE);
 }
 
 // Instantiate algorithm for the supported template types
