@@ -31,7 +31,6 @@
 #include "nav2_msgs/msg/costmap.hpp"
 #include "nav2_util/robot_utils.hpp"
 #include "nav2_util/simple_action_server.hpp"
-#include "visualization_msgs/msg/marker.hpp"
 #include "tf2_ros/transform_listener.h"
 #include "tf2_ros/create_timer_ros.h"
 #include "nav2_costmap_2d/costmap_2d_ros.hpp"
@@ -243,6 +242,7 @@ protected:
   std::vector<std::string> planner_ids_;
   std::vector<std::string> planner_types_;
   double max_planner_duration_;
+  rclcpp::Duration costmap_update_timeout_;
   std::string planner_ids_concat_;
 
   // TF buffer

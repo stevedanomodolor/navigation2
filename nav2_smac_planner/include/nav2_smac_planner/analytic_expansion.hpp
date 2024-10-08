@@ -15,11 +15,12 @@
 #ifndef NAV2_SMAC_PLANNER__ANALYTIC_EXPANSION_HPP_
 #define NAV2_SMAC_PLANNER__ANALYTIC_EXPANSION_HPP_
 
-#include <string>
-#include <vector>
+#include <functional>
 #include <list>
 #include <memory>
 #include <unordered_set>
+#include <string>
+#include <vector>
 
 #include "nav2_smac_planner/node_2d.hpp"
 #include "nav2_smac_planner/node_hybrid.hpp"

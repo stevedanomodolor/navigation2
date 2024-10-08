@@ -24,13 +24,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "pluginlib/class_loader.hpp"
 #include "pluginlib/class_list_macros.hpp"
-#include "nav2_util/geometry_utils.hpp"
-#include "nav2_util/robot_utils.hpp"
 #include "nav2_core/controller.hpp"
 #include "nav2_core/controller_exceptions.hpp"
-#include "nav2_util/node_utils.hpp"
 #include "nav2_costmap_2d/footprint_collision_checker.hpp"
-#include "angles/angles.h"
 
 namespace nav2_rotation_shim_controller
 {
@@ -172,10 +168,10 @@ protected:
   nav2_core::Controller::Ptr primary_controller_;
   bool path_updated_;
   nav_msgs::msg::Path current_path_;
-  double forward_sampling_distance_, angular_dist_threshold_;
+  double forward_sampling_distance_, angular_dist_threshold_, angular_disengage_threshold_;
   double rotate_to_heading_angular_vel_, max_angular_accel_;
   double control_duration_, simulate_ahead_time_;
-  bool rotate_to_goal_heading_;
+  bool rotate_to_goal_heading_, in_rotation_;
 
   // Dynamic parameters handler
   std::mutex mutex_;
