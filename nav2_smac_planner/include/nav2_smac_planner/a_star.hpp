@@ -25,7 +25,6 @@
 #include <queue>
 #include <tuple>
 #include <utility>
-#include <vector>
 
 #include "nav2_costmap_2d/costmap_2d.hpp"
 #include "nav2_core/planner_exceptions.hpp"
