@@ -106,7 +106,7 @@ def main():
     costmap = np.asarray(costmap_msg.data)
     costmap.resize(costmap_msg.metadata.size_y, costmap_msg.metadata.size_x)
 
-    planners = ["DEFAULT_Smac2d", "BIDIRECTIONAL_Smac2d", "ALL_DIRECTION_Smac2d", "DEFAULT_SmacHybrid", "BIDIRECTIONAL_SmacHybrid", "ALL_DIRECTION_SmacHybrid", "DEFAULT_SmacLattice", "BIDIRECTIONAL_SmacLattice", "ALL_DIRECTION_SmacLattice"] 
+    planners = ['Navfn', 'ThetaStar', 'SmacHybrid', 'Smac2d', 'SmacLattice'] 
     max_cost = 210
     side_buffer = 100
     time_stamp = navigator.get_clock().now().to_msg()
