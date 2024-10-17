@@ -193,7 +193,7 @@ void AStarAlgorithm<Node2D>::setGoal(
   const float & mx,
   const float & my,
   const unsigned int & dim_3,
-  const GoalHeadingMode & goal_heading_mode)
+  const GoalHeadingMode & /*goal_heading_mode*/)
 {
   (void) goal_heading_mode;
   if (dim_3 != 0) {
