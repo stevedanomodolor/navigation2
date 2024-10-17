@@ -195,7 +195,6 @@ void AStarAlgorithm<Node2D>::setGoal(
   const unsigned int & dim_3,
   const GoalHeadingMode & /*goal_heading_mode*/)
 {
-  (void) goal_heading_mode;
   if (dim_3 != 0) {
     throw std::runtime_error("Node type Node2D cannot be given non-zero goal dim 3.");
   }
