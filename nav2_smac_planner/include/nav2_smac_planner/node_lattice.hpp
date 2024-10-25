@@ -346,14 +346,6 @@ public:
     const SearchInfo & search_info);
 
   /**
-   * @brief Recompute the bidirectional and all direction distance heuristics
-   * @param goal_coords All valid goal coordinates
-   */
-  static void ReComputeDistanceHeuristic(
-    const CoordinateVector & goals_coords
-  );
-
-  /**
    * @brief Compute the wavefront heuristic
    * @param costmap Costmap to use
    * @param goal_coords Coordinates to start heuristic expansion at
@@ -420,6 +412,14 @@ public:
    * @param current_node
    */
   void addNodeToPath(NodePtr current_node, CoordinateVector & path);
+
+  /**
+   * @brief Recompute the bidirectional and all direction distance heuristics
+   * @param goal_coords All valid goal coordinates
+   */
+  static void ReComputeDistanceHeuristic(
+    const CoordinateVector & goals_coords
+  );
 
   /**
    * @brief sets the heading of the goal
