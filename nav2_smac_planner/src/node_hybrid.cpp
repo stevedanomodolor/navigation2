@@ -798,7 +798,6 @@ float NodeHybrid::getDistanceHeuristic(
     const int x_pos = node_coords_relative.x + floored_size;
     const int y_pos = static_cast<int>(mirrored_relative_y);
     int index = 0;
-    // look into it whether the math is correct 
     if (goal_heading_mode == GoalHeadingMode::DEFAULT)
     {
       index =
@@ -833,6 +832,8 @@ float NodeHybrid::getDistanceHeuristic(
     from[1] = node_coords.y;
     from[2] = node_coords.theta * motion_table.num_angle_quantization;
     float min_motion_heuristic = std::numeric_limits<float>::max();
+    // TODO(@stevedanomodolor): This is a very expensive operation, we might want to optimize this
+    // for the case where we have multiple goals
     for (unsigned int i = 0; i != goals_coords.size(); i++) {
       to[0] = goals_coords[i].x;
       to[1] = goals_coords[i].y;

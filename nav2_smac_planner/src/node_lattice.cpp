@@ -413,7 +413,6 @@ float NodeLattice::getDistanceHeuristic(
     const int x_pos = node_coords_relative.x + floored_size;
     const int y_pos = static_cast<int>(mirrored_relative_y);
     int index = 0;
-    // look into it whether the math is correct 
     if (goal_heading_mode == GoalHeadingMode::DEFAULT)
     {
       index =
@@ -427,8 +426,8 @@ float NodeLattice::getDistanceHeuristic(
       // convert the theta to the bidirectional theta between 0 and 180 
       int theta_pos_bidirectional = theta_pos % int(motion_table.num_angle_quantization / 2);
       index =
-      x_pos * ceiling_size * motion_table.num_angle_quantization / 2 +
-      y_pos * motion_table.num_angle_quantization / 2 +
+      x_pos * ceiling_size * int(motion_table.num_angle_quantization / 2) +
+      y_pos * int(motion_table.num_angle_quantization / 2) +
       theta_pos_bidirectional;
       motion_heuristic = dist_heuristic_lookup_table_bidirectional[index];
     }
@@ -440,13 +439,12 @@ float NodeLattice::getDistanceHeuristic(
     }
   } else if (obstacle_heuristic == 0.0) {
     static ompl::base::ScopedState<> from(motion_table.state_space), to(motion_table.state_space);
-    // to[0] = goal_coords.x;
-    // to[1] = goal_coords.y;
-    // to[2] = motion_table.getAngleFromBin(goal_coords.theta);
     from[0] = node_coords.x;
     from[1] = node_coords.y;
     from[2] = motion_table.getAngleFromBin(node_coords.theta);
     float min_motion_heuristic = std::numeric_limits<float>::max();
+    // TODO(@stevedanomodolor): This is a very expensive operation, we might want to optimize this
+    // for the case where we have multiple goals
     for (unsigned int i = 0; i != goals_coords.size(); i++) {
       to[0] = goals_coords[i].x;
       to[1] = goals_coords[i].y;
