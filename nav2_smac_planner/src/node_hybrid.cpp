@@ -39,9 +39,13 @@ LookupTable NodeHybrid::obstacle_heuristic_lookup_table;
 float NodeHybrid::travel_distance_cost = sqrtf(2.0f);
 HybridMotionTable NodeHybrid::motion_table;
 float NodeHybrid::size_lookup = 25;
+int NodeHybrid::dim_3_size_int = 0;
 LookupTable NodeHybrid::dist_heuristic_lookup_table;
+LookupTable NodeHybrid::dist_heuristic_lookup_table_bidirectional;
+LookupTable NodeHybrid::dist_heuristic_lookup_table_all_direction;
 std::shared_ptr<nav2_costmap_2d::Costmap2DROS> NodeHybrid::costmap_ros = nullptr;
 std::shared_ptr<nav2_costmap_2d::InflationLayer> NodeHybrid::inflation_layer = nullptr;
+GoalHeadingMode NodeHybrid::goal_heading_mode = GoalHeadingMode::DEFAULT;
 
 ObstacleHeuristicQueue NodeHybrid::obstacle_heuristic_queue;
 
@@ -445,12 +449,7 @@ float NodeHybrid::getHeuristicCost(
   // obstacle heuristic does not depend on goal heading
   const float obstacle_heuristic =
     getObstacleHeuristic(node_coords, goals_coords[0], motion_table.cost_penalty);
-  float distance_heuristic = std::numeric_limits<float>::max();
-  for (unsigned int i = 0; i < goals_coords.size(); i++) {
-    distance_heuristic = std::min(
-      distance_heuristic,
-      getDistanceHeuristic(node_coords, goals_coords[i], obstacle_heuristic));
-  }
+  const float distance_heuristic =  getDistanceHeuristic(node_coords, goals_coords, obstacle_heuristic);
   return std::max(obstacle_heuristic, distance_heuristic);
 }
 
@@ -750,7 +749,7 @@ float NodeHybrid::getObstacleHeuristic(
 
 float NodeHybrid::getDistanceHeuristic(
   const Coordinates & node_coords,
-  const Coordinates & goal_coords,
+  const CoordinateVector & goals_coords,
   const float & obstacle_heuristic)
 {
   // rotate and translate node_coords such that goal_coords relative is (0,0,0)
@@ -760,6 +759,8 @@ float NodeHybrid::getDistanceHeuristic(
 
   // This angle is negative since we are de-rotating the current node
   // by the goal angle; cos(-th) = cos(th) & sin(-th) = -sin(th)
+  // we will use the first goal of the vector
+  const Coordinates goal_coords = goals_coords[0];
   const TrigValues & trig_vals = motion_table.trig_values[goal_coords.theta];
   const float cos_th = trig_vals.first;
   const float sin_th = -trig_vals.second;
@@ -796,22 +797,50 @@ float NodeHybrid::getDistanceHeuristic(
     }
     const int x_pos = node_coords_relative.x + floored_size;
     const int y_pos = static_cast<int>(mirrored_relative_y);
-    const int index =
+    int index = 0;
+    // look into it whether the math is correct 
+    if (goal_heading_mode == GoalHeadingMode::DEFAULT)
+    {
+      index =
       x_pos * ceiling_size * motion_table.num_angle_quantization +
       y_pos * motion_table.num_angle_quantization +
       theta_pos;
-    motion_heuristic = dist_heuristic_lookup_table[index];
+      motion_heuristic = dist_heuristic_lookup_table[index];
+    }
+    else if(goal_heading_mode == GoalHeadingMode::BIDIRECTIONAL)
+    {
+      // convert the theta to the bidirectional theta between 0 and 180 
+      int theta_pos_bidirectional = theta_pos % int(motion_table.num_angle_quantization / 2);
+      index =
+      x_pos * ceiling_size * motion_table.num_angle_quantization / 2 +
+      y_pos * motion_table.num_angle_quantization / 2 +
+      theta_pos_bidirectional;
+      motion_heuristic = dist_heuristic_lookup_table_bidirectional[index];
+    }
+    else if (goal_heading_mode == GoalHeadingMode::ALL_DIRECTION)
+    {
+      // just x and y, no theta 
+      index = x_pos * ceiling_size + y_pos;
+      motion_heuristic = dist_heuristic_lookup_table_all_direction[index];
+    }
+
+    
   } else if (obstacle_heuristic <= 0.0) {
     // If no obstacle heuristic value, must have some H to use
     // In nominal situations, this should never be called.
     static ompl::base::ScopedState<> from(motion_table.state_space), to(motion_table.state_space);
-    to[0] = goal_coords.x;
-    to[1] = goal_coords.y;
-    to[2] = goal_coords.theta * motion_table.num_angle_quantization;
     from[0] = node_coords.x;
     from[1] = node_coords.y;
     from[2] = node_coords.theta * motion_table.num_angle_quantization;
-    motion_heuristic = motion_table.state_space->distance(from(), to());
+    float min_motion_heuristic = std::numeric_limits<float>::max();
+    for (unsigned int i = 0; i != goals_coords.size(); i++) {
+      to[0] = goals_coords[i].x;
+      to[1] = goals_coords[i].y;
+      to[2] = goals_coords[i].theta * motion_table.num_angle_quantization;
+      const float min_motion_heuristic_i = motion_table.state_space->distance(from(), to());
+      min_motion_heuristic = std::min(min_motion_heuristic,min_motion_heuristic_i);
+    }
+    motion_heuristic = min_motion_heuristic;
   }
 
   return motion_heuristic;
@@ -843,7 +872,7 @@ void NodeHybrid::precomputeDistanceHeuristic(
   size_lookup = lookup_table_dim;
   float motion_heuristic = 0.0;
   unsigned int index = 0;
-  int dim_3_size_int = static_cast<int>(dim_3_size);
+  dim_3_size_int = static_cast<int>(dim_3_size);
   float angular_bin_size = 2 * M_PI / static_cast<float>(dim_3_size);
 
   // Create a lookup table of Dubin/Reeds-Shepp distances in a window around the goal
@@ -865,6 +894,91 @@ void NodeHybrid::precomputeDistanceHeuristic(
     }
   }
 }
+
+void NodeHybrid::ReComputeDistanceHeuristic(
+    const CoordinateVector & goals_coords
+  )
+  {
+    if(goal_heading_mode != GoalHeadingMode::BIDIRECTIONAL || goal_heading_mode != GoalHeadingMode::ALL_DIRECTION)
+    {
+      return;
+    }
+    // store all the heading in a set to avoid recomputing the same heading
+    std::set<int> heading_set;
+    // is this right?
+    for (unsigned int i = 0; i < goals_coords.size(); i++) {
+      // we need to rotate the goal coords such that the goal is relative to (0,0,0)
+      double dtheta_bin = - goals_coords[i].theta;
+      if (dtheta_bin < 0) {
+        dtheta_bin += motion_table.num_angle_quantization;
+      }
+      if (dtheta_bin > motion_table.num_angle_quantization) {
+        dtheta_bin -= motion_table.num_angle_quantization;
+      }
+      heading_set.insert(dtheta_bin);
+    }
+   
+    // we want to store the min of each angle bin in the distance heuristic lookup table
+    if (goal_heading_mode == GoalHeadingMode::BIDIRECTIONAL)
+    {
+      unsigned int index = 0;
+      int dim_3_size_int_half = static_cast<int>(dim_3_size_int / 2);
+      dist_heuristic_lookup_table_bidirectional.clear();
+      dist_heuristic_lookup_table_bidirectional.reserve(
+        size_lookup * ceil(size_lookup / 2.0) * dim_3_size_int_half);
+
+      // we will only store half of the angle bins since the other half is a mirror of the first half
+      for (float x = ceil(-size_lookup / 2.0); x <= floor(size_lookup / 2.0); x += 1.0) {
+        for (float y = 0.0; y <= floor(size_lookup / 2.0); y += 1.0) {
+          for (int heading = 0; heading != dim_3_size_int_half; heading++) {
+            // check  the if angle is apth of the goals coords, we only apply the heuristic to the goal heading that has a valid input
+          const int heading_mirror = heading + dim_3_size_int_half;
+          const int index_heading = x * size_lookup * dim_3_size_int + y * dim_3_size_int + heading;
+          const int index_heading_mirror = x * size_lookup * dim_3_size_int + y * dim_3_size_int + heading_mirror;
+          float distance_heading = dist_heuristic_lookup_table[index_heading];
+          float distance_heading_mirror = dist_heuristic_lookup_table[index_heading_mirror];
+          float min_distance = std::numeric_limits<float>::max();
+            if(heading_set.find(heading) == heading_set.end() && heading_set.find(heading_mirror) != heading_set.end()){
+              min_distance = distance_heading_mirror;
+            }
+            else if(heading_set.find(heading) != heading_set.end() && heading_set.find(heading_mirror) == heading_set.end()){
+              min_distance = distance_heading;
+            }
+            else if(heading_set.find(heading) != heading_set.end() && heading_set.find(heading_mirror) != heading_set.end()){
+              min_distance = std::min(distance_heading, distance_heading_mirror);
+            }
+            dist_heuristic_lookup_table_bidirectional[index] = min_distance;              
+            index++;
+          }
+        }
+      } 
+    }
+    else if(goal_heading_mode == GoalHeadingMode::ALL_DIRECTION)
+    {
+      dist_heuristic_lookup_table_all_direction.clear();
+      dist_heuristic_lookup_table_all_direction.reserve(
+      size_lookup * ceil(size_lookup / 2.0));
+      unsigned int index = 0;
+      for (float x = ceil(-size_lookup / 2.0); x <= floor(size_lookup / 2.0); x += 1.0) {
+        for (float y = 0.0; y <= floor(size_lookup / 2.0); y += 1.0) {
+          float min_distance = std::numeric_limits<float>::max();
+          for (int heading = 0; heading != dim_3_size_int; heading++) {
+            // check  the if angle is part of the goals coords, we only apply the heuristic to the goal heading that has a valid input
+            if(heading_set.find(heading) == heading_set.end()){
+              continue;
+            }
+            const int lookup_index = x * size_lookup * dim_3_size_int + y * dim_3_size_int + heading;
+            min_distance = std::min(min_distance, dist_heuristic_lookup_table[lookup_index]);
+          }
+          dist_heuristic_lookup_table_all_direction[index] = min_distance;
+          index++;
+        }
+      }
+    }
+    
+
+   
+  }
 
 void NodeHybrid::getNeighbors(
   std::function<bool(const uint64_t &,

@@ -282,6 +282,12 @@ public:
    */
   bool backtracePath(CoordinateVector & path);
 
+  /**
+   * @brief Recompute the bidirectional and all direction distance heuristics
+   * @param goal_coords All valid goal coordinates
+   */
+  static void ReComputeDistanceHeuristic(const CoordinateVector & /*goals_coords*/);
+
   Node2D * parent;
   Coordinates pose;
   static float cost_travel_multiplier;
