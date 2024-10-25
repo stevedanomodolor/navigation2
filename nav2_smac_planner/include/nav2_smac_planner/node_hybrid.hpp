@@ -402,14 +402,6 @@ public:
     const unsigned int & dim_3_size,
     const SearchInfo & search_info);
 
-   /**
-   * @brief Recompute the bidirectional and all direction distance heuristics
-   * @param goal_coords All valid goal coordinates
-   */
-  static void ReComputeDistanceHeuristic(
-    const CoordinateVector & goals_coords
-  );
-
   /**
    * @brief Compute the Obstacle heuristic
    * @param node_coords Coordinates to get heuristic at
@@ -482,6 +474,15 @@ public:
     inflation_layer.reset();
     costmap_ros.reset();
   }
+
+  /**
+   * @brief Recompute the bidirectional and all direction distance heuristics
+   * @param goal_coords All valid goal coordinates
+   */
+  static void ReComputeDistanceHeuristic(
+    const CoordinateVector & goals_coords
+  );
+  
   /**
     * @brief sets the heading of the goal
     * @param goal_heading_mode_in The heading mode of the goal
