@@ -812,8 +812,8 @@ float NodeHybrid::getDistanceHeuristic(
       // convert the theta to the bidirectional theta between 0 and 180 
       int theta_pos_bidirectional = theta_pos % int(motion_table.num_angle_quantization / 2);
       index =
-      x_pos * ceiling_size * motion_table.num_angle_quantization / 2 +
-      y_pos * motion_table.num_angle_quantization / 2 +
+      x_pos * ceiling_size * int(motion_table.num_angle_quantization / 2) +
+      y_pos * int(motion_table.num_angle_quantization / 2) +
       theta_pos_bidirectional;
       motion_heuristic = dist_heuristic_lookup_table_bidirectional[index];
     }
