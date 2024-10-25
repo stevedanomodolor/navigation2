@@ -274,7 +274,6 @@ protected:
   SearchInfo _search_info;
 
   CoordinateVector _goals_coordinates;
-  GoalHeadingMode _goal_heading_mode{GoalHeadingMode::UNKNOWN};
   NodePtr _start;
   NodeSet _goalsSet;
 
