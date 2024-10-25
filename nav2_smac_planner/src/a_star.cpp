@@ -313,7 +313,6 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
     }
   }
 
-  // precompute the distance heuristic for all valid goals
   // We recreate the lookup table taking into conisderation the valid goals
   NodeT::ReComputeDistanceHeuristic(_goals_coordinates); 
   return true;
