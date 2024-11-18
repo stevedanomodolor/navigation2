@@ -74,6 +74,7 @@ typename AnalyticExpansion<NodeT>::NodePtr AnalyticExpansion<NodeT>::tryAnalytic
     int desired_iterations = std::max(
       static_cast<int>(closest_distance / _search_info.analytic_expansion_ratio),
       static_cast<int>(std::ceil(_search_info.analytic_expansion_ratio)));
+    
     // If we are closer now, we should update the target number of iterations to go
     analytic_iterations =
       std::min(analytic_iterations, desired_iterations);
