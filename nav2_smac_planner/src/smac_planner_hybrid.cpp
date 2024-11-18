@@ -170,13 +170,11 @@ void SmacPlannerHybrid::configure(
   nav2_util::declare_parameter_if_not_declared(
     node, name + ".goal_heading_mode", rclcpp::ParameterValue("DEFAULT"));
   node->get_parameter(name + ".goal_heading_mode", goal_heading_type);
-  GoalHeadingMode goal_heading_mode = fromStringToGH(goal_heading_type);
-  if (goal_heading_mode == GoalHeadingMode::UNKNOWN) {
+  _goal_heading_mode = fromStringToGH(goal_heading_type);
+  if (_goal_heading_mode == GoalHeadingMode::UNKNOWN) {
     std::string error_msg = "Unable to get GoalHeader type. Given '" + goal_heading_type + "' "
       "Valid options are DEFAULT, BIDIRECTIONAL, ALL_DIRECTION. ";
     throw nav2_core::PlannerException(error_msg);
-  } else {
-    _goal_heading_mode = goal_heading_mode;
   }
 
   _motion_model = fromString(_motion_model_for_search);
