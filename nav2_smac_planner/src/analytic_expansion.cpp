@@ -82,9 +82,11 @@ typename AnalyticExpansion<NodeT>::NodePtr AnalyticExpansion<NodeT>::tryAnalytic
     // Always run the expansion on the first run in case there is a
     // trivial path to be found
     if (analytic_iterations <= 0) {
+
+      // Reset the counter and try the analytic path expansion
+      analytic_iterations = desired_iterations;
+      
       for (auto goal_node : goals_node) {
-        // Reset the counter and try the analytic path expansion
-        analytic_iterations = desired_iterations;
         AnalyticExpansionNodes analytic_nodes =
           getAnalyticPath(
           current_node, goal_node, getter,
