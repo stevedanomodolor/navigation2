@@ -257,7 +257,6 @@ void AStarAlgorithm<NodeT>::setGoal(
       break;
     case GoalHeadingMode::UNKNOWN:
       throw std::runtime_error("Goal heading is UNKNOWN.");
-      break;
   }
 
   // we just have to check whether the x and y are the same because the dim3 is not used
