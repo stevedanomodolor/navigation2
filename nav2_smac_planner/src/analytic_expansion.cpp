@@ -74,7 +74,7 @@ typename AnalyticExpansion<NodeT>::NodePtr AnalyticExpansion<NodeT>::tryAnalytic
     int desired_iterations = std::max(
       static_cast<int>(closest_distance / _search_info.analytic_expansion_ratio),
       static_cast<int>(std::ceil(_search_info.analytic_expansion_ratio)));
-    
+
     // If we are closer now, we should update the target number of iterations to go
     analytic_iterations =
       std::min(analytic_iterations, desired_iterations);
@@ -82,10 +82,9 @@ typename AnalyticExpansion<NodeT>::NodePtr AnalyticExpansion<NodeT>::tryAnalytic
     // Always run the expansion on the first run in case there is a
     // trivial path to be found
     if (analytic_iterations <= 0) {
-
       // Reset the counter and try the analytic path expansion
       analytic_iterations = desired_iterations;
-      
+
       for (auto goal_node : goals_node) {
         AnalyticExpansionNodes analytic_nodes =
           getAnalyticPath(
