@@ -291,6 +291,7 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
   if (!_start || _goalsSet.empty()) {
     throw std::runtime_error("Failed to compute path, no valid start or goal given.");
   }
+  
   // Check if ending point is valid
   if (getToleranceHeuristic() < 0.001) {
     // if a node is not valid, prune it from the goals set
