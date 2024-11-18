@@ -262,9 +262,8 @@ void AStarAlgorithm<NodeT>::setGoal(
 
   // we just have to check whether the x and y are the same because the dim3 is not used
   // in the computation of the obstacle heuristic
-  if (!_search_info.cache_obstacle_heuristic ||
-    (goals_coordinates[0].x != _goals_coordinates[0].x &&
-    goals_coordinates[0].y != _goals_coordinates[0].y))
+  if (!_search_info.cache_obstacle_heuristic || 
+      goals_coordinates != _goals_coordinates)
   {
     if (!_start) {
       throw std::runtime_error("Start must be set before goal.");
