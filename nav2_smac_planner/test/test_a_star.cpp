@@ -400,10 +400,17 @@ TEST(AStarTest, test_se2_single_pose_path)
     };
   // functional case testing
   a_star.setCollisionChecker(checker.get());
+  nav2_smac_planner::NodeHybrid::CoordinateVector path;
+
+  // test with no goals set nor start
+  EXPECT_THROW(
+    a_star.createPath(
+      path, num_it, tolerance,
+      dummy_cancel_checker), std::runtime_error);
+
   a_star.setStart(10u, 10u, 0u);
   // Goal is one costmap cell away
   a_star.setGoal(12u, 10u, 0u);
-  nav2_smac_planner::NodeHybrid::CoordinateVector path;
   EXPECT_TRUE(a_star.createPath(path, num_it, tolerance, dummy_cancel_checker));
 
   // Check that the path is length one
@@ -491,9 +498,10 @@ TEST(AStarTest, test_goal_heading_mode)
   // UNKNOWN goal heading mode
   a_star.setCollisionChecker(checker.get());
   a_star.setStart(10u, 10u, 0u);
+
   EXPECT_THROW(
     a_star.setGoal(
-      80u, 80u, 40u,
+      80u, 80u, 10u,
       nav2_smac_planner::GoalHeadingMode::UNKNOWN), std::runtime_error);
 }
 
