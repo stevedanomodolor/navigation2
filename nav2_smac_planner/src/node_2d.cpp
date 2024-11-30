@@ -168,4 +168,10 @@ bool Node2D::backtracePath(CoordinateVector & path)
   return true;
 }
 
+void Node2D::ReComputeDistanceHeuristic(const CoordinateVector & /*goals_coords*/)
+{
+  // No need to recompute the distance heuristic for 2D nodes
+  return;
+}
+
 }  // namespace nav2_smac_planner

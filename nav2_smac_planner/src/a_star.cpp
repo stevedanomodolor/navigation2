@@ -271,7 +271,8 @@ void AStarAlgorithm<NodeT>::setGoal(
     NodeT::resetObstacleHeuristic(
       _collision_checker->getCostmapROS(), _start->pose.x, _start->pose.y, mx, my);
   }
-
+  
+  NodeT::setGoalHeadingMode(goal_heading_mode);
   _goals_coordinates = goals_coordinates;
   for (unsigned int i = 0; i < goals.size(); i++) {
     goals[i]->setPose(_goals_coordinates[i]);
@@ -311,7 +312,8 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
     }
   }
 
-  // Note: We do not check the if the start is valid because it is cleared
+  // We recreate the lookup table taking into conisderation the valid goals
+  NodeT::ReComputeDistanceHeuristic(_goals_coordinates); 
   return true;
 }
 

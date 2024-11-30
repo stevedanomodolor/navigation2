@@ -423,7 +423,7 @@ public:
    */
   static float getDistanceHeuristic(
     const Coordinates & node_coords,
-    const Coordinates & goal_coords,
+    const CoordinateVector & goals_coords,
     const float & obstacle_heuristic);
 
   /**
@@ -475,6 +475,23 @@ public:
     costmap_ros.reset();
   }
 
+  /**
+   * @brief Recompute the bidirectional and all direction distance heuristics
+   * @param goal_coords All valid goal coordinates
+   */
+  static void ReComputeDistanceHeuristic(
+    const CoordinateVector & goals_coords
+  );
+  
+  /**
+    * @brief sets the heading of the goal
+    * @param goal_heading_mode_in The heading mode of the goal
+    */
+  static void setGoalHeadingMode(const GoalHeadingMode & goal_heading_mode_in)
+  {
+    goal_heading_mode = goal_heading_mode_in;
+  }
+
   NodeHybrid * parent;
   Coordinates pose;
 
@@ -489,7 +506,11 @@ public:
   static std::shared_ptr<nav2_costmap_2d::InflationLayer> inflation_layer;
   // Dubin / Reeds-Shepp lookup and size for dereferencing
   static LookupTable dist_heuristic_lookup_table;
+  static LookupTable dist_heuristic_lookup_table_bidirectional;
+  static LookupTable dist_heuristic_lookup_table_all_direction;
   static float size_lookup;
+  static int dim_3_size_int;
+  static GoalHeadingMode goal_heading_mode;
 
 private:
   float _cell_cost;

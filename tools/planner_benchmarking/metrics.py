@@ -97,29 +97,71 @@ def main():
     navigator = BasicNavigator()
 
     # Set map to use, other options: 100by100_15, 100by100_10
-    map_path = os.getcwd() + '/' + glob.glob('**/100by100_20.yaml', recursive=True)[0]
-    navigator.changeMap(map_path)
-    time.sleep(2)
+    # map_path = os.getcwd() + '/' + glob.glob('**/100by100_20.yaml', recursive=True)[0]
+    # navigator.changeMap(map_path)
+    # time.sleep(2)
 
     # Get the costmap for start/goal validation
     costmap_msg = navigator.getGlobalCostmap()
     costmap = np.asarray(costmap_msg.data)
     costmap.resize(costmap_msg.metadata.size_y, costmap_msg.metadata.size_x)
 
-    planners = ['Navfn', 'ThetaStar', 'SmacHybrid', 'Smac2d', 'SmacLattice']
+    planners = ["DEFAULT_Smac2d", "BIDIRECTIONAL_Smac2d", "ALL_DIRECTION_Smac2d", "DEFAULT_SmacHybrid", "BIDIRECTIONAL_SmacHybrid", "ALL_DIRECTION_SmacHybrid", "DEFAULT_SmacLattice", "BIDIRECTIONAL_SmacLattice", "ALL_DIRECTION_SmacLattice"]
     max_cost = 210
     side_buffer = 100
     time_stamp = navigator.get_clock().now().to_msg()
     results = []
     seed(33)
 
+    # # lets get the data 
+    # with open('/extra_files/goals.pickle', 'rb') as f:
+    #     goals = pickle.load(f)
+    
+    # start_goals = goals[0]
+    # end_goals = goals[1]
+    start_goals = []
+    end_goals = []
+
+    start_goal = PoseStamped()
+    start_goal.header.frame_id = 'map'
+    start_goal.header.stamp = time_stamp
+    start_goal.pose.position.x = -1.7
+    start_goal.pose.position.y = -1.0
+    yaw = math.pi/2.0
+    quad = euler2quat(0.0, 0.0, yaw)
+    start_goal.pose.orientation.w = quad[0]
+    start_goal.pose.orientation.x = quad[1]
+    start_goal.pose.orientation.y = quad[2]
+    start_goal.pose.orientation.z = quad[3]
+
+    end_goal = PoseStamped()
+    end_goal.header.frame_id = 'map'
+    end_goal.header.stamp = time_stamp
+    end_goal.pose.position.x = -1.7
+    end_goal.pose.position.y = 1.0
+    yaw = math.pi/2.0
+    quad = euler2quat(0.0, 0.0, yaw)
+    end_goal.pose.orientation.w = quad[0]
+    end_goal.pose.orientation.x = quad[1]
+    end_goal.pose.orientation.y = quad[2]
+    end_goal.pose.orientation.z = quad[3]
+
+    start_goals.append(start_goal)
+    end_goals.append(end_goal)
+
+    n = len(start_goals)
+
+
     random_pairs = 100
     res = costmap_msg.metadata.resolution
     i = 0
-    while len(results) != random_pairs:
-        print('Cycle: ', i, 'out of: ', random_pairs)
-        start = getRandomStart(costmap, max_cost, side_buffer, time_stamp, res)
-        goal = getRandomGoal(costmap, start, max_cost, side_buffer, time_stamp, res)
+    # while len(results) != random_pairs:
+    for i in range(n):
+        print('Cycle: ', i, 'out of: ', n)
+        # start = getRandomStart(costmap, max_cost, side_buffer, time_stamp, res)
+        # goal = getRandomGoal(costmap, start, max_cost, side_buffer, time_stamp, res)
+        start = start_goals[i]
+        goal = end_goals[i]
         print('Start', start)
         print('Goal', goal)
         result = getPlannerResults(navigator, start, goal, planners)
