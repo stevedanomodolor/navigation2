@@ -25,6 +25,8 @@ namespace nav2_behavior_tree
 
 /**
  * @brief A nav2_behavior_tree::BtActionNode class that wraps nav2_msgs::action::Spin
+ * @note This is an Asynchronous (long-running) node which may return a RUNNING state while executing.
+ *       It will re-initialize when halted.
  */
 class SpinAction : public BtActionNode<nav2_msgs::action::Spin>
 {
@@ -64,8 +66,11 @@ public:
         BT::InputPort<double>("spin_dist", 1.57, "Spin distance"),
         BT::InputPort<double>("time_allowance", 10.0, "Allowed time for spinning"),
         BT::InputPort<bool>("is_recovery", true, "True if recovery"),
+        BT::InputPort<bool>("disable_collision_checks", false, "Disable collision checking"),
         BT::OutputPort<ActionResult::_error_code_type>(
-          "error_code_id", "The spin behavior error code")
+          "error_code_id", "The spin behavior error code"),
+        BT::OutputPort<std::string>(
+          "error_msg", "The spin behavior error msg"),
       });
   }
 
@@ -86,7 +91,6 @@ public:
 
 private:
   bool is_recovery_;
-  bool initialized_;
 };
 
 }  // namespace nav2_behavior_tree

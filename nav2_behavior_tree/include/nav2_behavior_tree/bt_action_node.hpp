@@ -20,9 +20,11 @@
 #include <chrono>
 
 #include "behaviortree_cpp/action_node.h"
+#include "behaviortree_cpp/json_export.h"
 #include "nav2_util/node_utils.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "nav2_behavior_tree/bt_utils.hpp"
+#include "nav2_behavior_tree/json_utils.hpp"
 
 namespace nav2_behavior_tree
 {
@@ -32,6 +34,8 @@ using namespace std::chrono_literals;  // NOLINT
 /**
  * @brief Abstract class representing an action based BT node
  * @tparam ActionT Type of action
+ * @note This is an Asynchronous (long-running) node which may return a RUNNING state while executing.
+ *       It will re-initialize when halted.
  */
 template<class ActionT>
 class BtActionNode : public BT::ActionNodeBase
@@ -191,14 +195,18 @@ public:
   {
     // first step to be done only at the beginning of the Action
     if (!BT::isStatusActive(status())) {
-      // setting the status to RUNNING to notify the BT Loggers (if any)
-      setStatus(BT::NodeStatus::RUNNING);
-
       // reset the flag to send the goal or not, allowing the user the option to set it in on_tick
       should_send_goal_ = true;
 
+      // Clear the input and output messages to make sure we have no leftover from previous calls
+      goal_ = typename ActionT::Goal();
+      result_ = typename rclcpp_action::ClientGoalHandle<ActionT>::WrappedResult();
+
       // user defined callback, may modify "should_send_goal_".
       on_tick();
+
+      // setting the status to RUNNING to notify the BT Loggers (if any)
+      setStatus(BT::NodeStatus::RUNNING);
 
       if (!should_send_goal_) {
         return BT::NodeStatus::FAILURE;
