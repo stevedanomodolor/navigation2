@@ -22,6 +22,7 @@ RUN vcs import ./ < ../underlay.repos
 # copy overlay source
 ARG OVERLAY_WS
 WORKDIR $OVERLAY_WS/src
+COPY ./ ./navigation2
 
 # copy manifests for caching
 WORKDIR /opt
