@@ -224,7 +224,8 @@ public:
    */
   static float getHeuristicCost(
     const Coordinates & node_coords,
-    const Coordinates & goal_coordinates);
+    const CoordinatesVector & goals_coords,
+    const GoalHeadingMode & goal_heading_mode);
 
   /**
    * @brief Initialize the neighborhood to be used in A*

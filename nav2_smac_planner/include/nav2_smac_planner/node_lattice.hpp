@@ -314,7 +314,8 @@ public:
    */
   static float getHeuristicCost(
     const Coordinates & node_coords,
-    const Coordinates & goal_coordinates);
+    const Coordinates & goal_coordinates,
+    const GoalHeadingMode & goal_heading_mode);
 
   /**
    * @brief Initialize motion models

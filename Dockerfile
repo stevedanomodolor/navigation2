@@ -16,13 +16,13 @@ FROM $FROM_IMAGE AS cacher
 # clone underlay source
 ARG UNDERLAY_WS
 WORKDIR $UNDERLAY_WS/src
-COPY ./tools/underlay.repos ../
+COPY ./navigation2/tools/underlay.repos ../
 RUN vcs import ./ < ../underlay.repos
 
 # copy overlay source
 ARG OVERLAY_WS
 WORKDIR $OVERLAY_WS/src
-COPY ./ ./navigation2
+COPY ./navigation2 ./navigation2
 
 # copy manifests for caching
 WORKDIR /opt
