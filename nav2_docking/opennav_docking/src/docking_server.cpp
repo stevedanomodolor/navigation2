@@ -85,25 +85,18 @@ DockingServer::on_configure(const rclcpp_lifecycle::State & state)
   get_parameter("odom_topic", odom_topic);
   odom_sub_ = std::make_unique<nav_2d_utils::OdomSubscriber>(node, odom_topic);
 
-  double action_server_result_timeout;
-  nav2_util::declare_parameter_if_not_declared(
-    node, "action_server_result_timeout", rclcpp::ParameterValue(10.0));
-  get_parameter("action_server_result_timeout", action_server_result_timeout);
-  rcl_action_server_options_t server_options = rcl_action_server_get_default_options();
-  server_options.result_timeout.nanoseconds = RCL_S_TO_NS(action_server_result_timeout);
-
   // Create the action servers for dock / undock
   docking_action_server_ = std::make_unique<DockingActionServer>(
     node, "dock_robot",
     std::bind(&DockingServer::dockRobot, this),
     nullptr, std::chrono::milliseconds(500),
-    true, server_options);
+    true);
 
   undocking_action_server_ = std::make_unique<UndockingActionServer>(
     node, "undock_robot",
     std::bind(&DockingServer::undockRobot, this),
     nullptr, std::chrono::milliseconds(500),
-    true, server_options);
+    true);
 
   // Create composed utilities
   mutex_ = std::make_shared<std::mutex>();
@@ -837,31 +830,34 @@ DockingServer::dynamicParametersCallback(std::vector<rclcpp::Parameter> paramete
 
   rcl_interfaces::msg::SetParametersResult result;
   for (auto parameter : parameters) {
-    const auto & type = parameter.get_type();
-    const auto & name = parameter.get_name();
+    const auto & param_type = parameter.get_type();
+    const auto & param_name = parameter.get_name();
+    if (param_name.find('.') != std::string::npos) {
+      continue;
+    }
 
-    if (type == ParameterType::PARAMETER_DOUBLE) {
-      if (name == "controller_frequency") {
+    if (param_type == ParameterType::PARAMETER_DOUBLE) {
+      if (param_name == "controller_frequency") {
         controller_frequency_ = parameter.as_double();
-      } else if (name == "initial_perception_timeout") {
+      } else if (param_name == "initial_perception_timeout") {
         initial_perception_timeout_ = parameter.as_double();
-      } else if (name == "wait_charge_timeout") {
+      } else if (param_name == "wait_charge_timeout") {
         wait_charge_timeout_ = parameter.as_double();
-      } else if (name == "undock_linear_tolerance") {
+      } else if (param_name == "undock_linear_tolerance") {
         undock_linear_tolerance_ = parameter.as_double();
-      } else if (name == "undock_angular_tolerance") {
+      } else if (param_name == "undock_angular_tolerance") {
         undock_angular_tolerance_ = parameter.as_double();
-      } else if (name == "rotation_angular_tolerance") {
+      } else if (param_name == "rotation_angular_tolerance") {
         rotation_angular_tolerance_ = parameter.as_double();
       }
-    } else if (type == ParameterType::PARAMETER_STRING) {
-      if (name == "base_frame") {
+    } else if (param_type == ParameterType::PARAMETER_STRING) {
+      if (param_name == "base_frame") {
         base_frame_ = parameter.as_string();
-      } else if (name == "fixed_frame") {
+      } else if (param_name == "fixed_frame") {
         fixed_frame_ = parameter.as_string();
       }
-    } else if (type == ParameterType::PARAMETER_INTEGER) {
-      if (name == "max_retries") {
+    } else if (param_type == ParameterType::PARAMETER_INTEGER) {
+      if (param_name == "max_retries") {
         max_retries_ = parameter.as_int();
       }
     }
