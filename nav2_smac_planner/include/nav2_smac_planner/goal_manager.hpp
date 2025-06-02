@@ -81,6 +81,15 @@ public:
   {
     clear();
     _goals_state = goals_state;
+
+    // print all goal ointer addresses
+    std::cout << "Goals addresses: " << std::endl;
+    for (const auto & goal_state : _goals_state) {
+      std::cout << "Goal address: " << goal_state.goal << std::endl;
+      
+    }
+
+    // print all goal poin
   }
 
   /**

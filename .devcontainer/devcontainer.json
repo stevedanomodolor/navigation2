@@ -7,13 +7,15 @@
         "cacheFrom": "ghcr.io/ros-navigation/navigation2:main"
     },
     "runArgs": [
-        "--name=nav2"
-        // "--cap-add=SYS_PTRACE", // enable debugging, e.g. gdb
-        // "--ipc=host", // shared memory transport with host, e.g. rviz GUIs
-        // "--network=host", // network access to host interfaces, e.g. eth0
-        // "--pid=host", // DDS discovery with host, without --network=host
-        // "--privileged", // device access to host peripherals, e.g. USB
-        // "--security-opt=seccomp=unconfined", // enable debugging, e.g. gdb
+        "--name=nav2",
+        "--cap-add=SYS_PTRACE", // enable debugging, e.g. gdb
+        "--ipc=host", // shared memory transport with host, e.g. rviz GUIs
+        "--network=host", // network access to host interfaces, e.g. eth0
+        "--pid=host", // DDS discovery with host, without --network=host
+        "--privileged", // device access to host peripherals, e.g. USB
+        "--security-opt=seccomp=unconfined", // enable debugging, e.g. gdb
+        "--volume=/tmp/.X11-unix:/tmp/.X11-unix",
+        "--gpus=all"
     ],
     "workspaceFolder": "/opt/overlay_ws/src/navigation2",
     "workspaceMount": "source=${localWorkspaceFolder},target=${containerWorkspaceFolder},type=bind",
@@ -22,7 +24,10 @@
     "postCreateCommand": ".devcontainer/post-create-command.sh",
     "remoteEnv": {
         "OVERLAY_MIXINS": "release ccache lld",
-        "CCACHE_DIR": "/tmp/.ccache"
+        "CCACHE_DIR": "/tmp/.ccache",
+        "QT_X11_NO_MITSHM": "1",
+        "DISPLAY": "${localEnv:DISPLAY}",
+        "APP_ENV": "dev"
     },
     "mounts": [
         {
