@@ -277,7 +277,6 @@ protected:
   unsigned int _coarse_search_resolution;
   SearchInfo _search_info;
   unsigned int _dummy_index{0};
-  Coordinates _goal_coordinates;
 
   NodePtr _start;
   GoalManagerT _goal_manager;

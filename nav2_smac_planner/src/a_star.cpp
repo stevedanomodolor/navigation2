@@ -43,7 +43,6 @@ AStarAlgorithm<NodeT>::AStarAlgorithm(
   _x_size(0),
   _y_size(0),
   _search_info(search_info),
-  _goal_coordinates(Coordinates()),
   _start(nullptr),
   _goal_manager(GoalManagerT()),
   _motion_model(motion_model)
@@ -226,9 +225,7 @@ void AStarAlgorithm<NodeT>::setGoal(
 
   unsigned int num_bins = NodeT::motion_table.num_angle_quantization;
   GoalStateVector goals_state;
-
-  std::cout << "--------------------Printing received goal----------------------------"<< std::endl;
-  std::cout << "Goal coordinates: (" << mx << ", " << my << ", " << dim_3 << ")" << std::endl;
+  Coordinates ref_goal_coord(mx, my, static_cast<float>(dim_3));
 
   // set goal based on heading mode
   switch (goal_heading_mode) {
@@ -239,27 +236,8 @@ void AStarAlgorithm<NodeT>::setGoal(
             static_cast<unsigned int>(mx),
             static_cast<unsigned int>(my),
             dim_3));
-
-          // auto index = NodeT::getIndex(
-          //   static_cast<unsigned int>(mx),
-          //   static_cast<unsigned int>(my),
-          //   dim_3);
-            // if (index == _dummy_index) {
-            //   throw std::runtime_error("Goal index is dummy index, check if goal is valid.");
-            // }
-            // _in
-
-          // print get index for debug
-        std::cout << "Goal index: " << NodeT::getIndex (
-          static_cast<unsigned int>(mx),
-          static_cast<unsigned int>(my),
-          dim_3) << std::endl;
         
         goal->setPose(typename NodeT::Coordinates(mx, my, static_cast<float>(dim_3)));
-        // properly copy goal nodfeptr to goals_state
-        // and set it as validç
-        // rint goal address for debug
-        std::cout << "Goal address: " << goal << std::endl;
         goals_state.push_back({goal, true});
         break;
       }
@@ -281,10 +259,11 @@ void AStarAlgorithm<NodeT>::setGoal(
             static_cast<unsigned int>(mx),
             static_cast<unsigned int>(my),
             opposite_heading));
+
         opposite_goal->setPose(
           typename NodeT::Coordinates(mx, my, static_cast<float>(opposite_heading)));
-        goals_state.push_back({opposite_goal, true});
-        break;
+        goals_state.push_back({opposite_goal, true});      
+          break;
       }
 
     case GoalHeadingMode::ALL_DIRECTION: {
@@ -307,44 +286,10 @@ void AStarAlgorithm<NodeT>::setGoal(
       throw std::runtime_error("Goal heading is UNKNOWN.");
   }
 
-  // check if we need to reset the obstacle heuristic, we only need to
-  // check that the x and y component has changed
-  typename NodeT::Coordinates goal_coords(mx, my, dim_3);
 
+  if (!_search_info.cache_obstacle_heuristic || 
+      _goal_manager.hasGoalChanged(ref_goal_coord)) {
 
-  // // Lambda to check if goal has changed
-  // auto goalHasChanged = [&]() -> bool {
-  //     if (previous_goals.empty()) {
-  //       std::cout << "No previous goals, assuming goal has changed." << std::endl;
-  //       return true;
-  //     }
-
-  //     std::cout << "inside here" << std::endl;
-  //     /// print previous goals for debug and current goals for debug
-  //     std::cout << "Previous goals: " << std::endl;
-  //     for (const auto & goal_state : previous_goals) {
-  //       std::cout << "Previous Goal: (" << goal_state.goal->pose.x << ", "
-  //                 << goal_state.goal->pose.y  << ") "
-  //                 << "Valid: " << goal_state.is_valid << std::endl;
-  //     }
-  //     std::cout << "Current goals: " << std::endl;
-  //     for (const auto & goal_state : goals_state) {
-  //       std::cout << "Current Goal: (" << goal_state.goal->pose.x << ", "
-  //                 << goal_state.goal->pose.y  << ") "
-  //                 << "Valid: " << goal_state.is_valid << std::endl;
-  //     }
-
-  //     const auto & prev = previous_goals.front().goal;
-  //     const auto & curr = goals_state.front().goal;
-  //     return (prev->pose.x != curr->pose.x) || (prev->pose.y != curr->pose.y);
-  //   };
-
-  // goal hjas changed, reset the obstacle heuristic
-  std::cout << "Checking if goal has changed..." << std::endl;
-  std::cout << (goal_coords != _goal_coordinates) << std::endl;
-
-  if (!_search_info.cache_obstacle_heuristic || goal_coords != _goal_coordinates) {
-    std::cout << "Resetting obstacle heuristic..." << std::endl;
     if (!_start) {
       throw std::runtime_error("Start must be set before goal.");
     }
@@ -352,27 +297,12 @@ void AStarAlgorithm<NodeT>::setGoal(
     NodeT::resetObstacleHeuristic(
       _collision_checker->getCostmapROS(), _start->pose.x, _start->pose.y, mx, my);
   }
-
-  // assign the goals state
-  //print all goals for debug
-  std::cout << "Goals set: " << std::endl;
-  for (const auto & goal_state : goals_state) {
-    std::cout << "Goal: (" << goal_state.goal->pose.x << ", "
-              << goal_state.goal->pose.y << ", "
-              << goal_state.goal->pose.theta << ") "
-              << "Valid: " << goal_state.is_valid << std::endl;
-
-    // print nodetr address for debug
-    std::cout << "Node address: " << goal_state.goal << std::endl;
-  }
   
 
   // // compare the input goal with goal state 
   // if(mx !=
   _goal_manager.setGoalStates(goals_state);
-  _goal_coordinates = goal_coords;
-
-  std::cout  << "--------------------Goal set----------------------------"<< std::endl;
+  _goal_manager.setRefGoalCoordinates(ref_goal_coord);
 }
 
 template<typename NodeT>
@@ -390,28 +320,6 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
 
   // remove invalid goals
   _goal_manager.removeInvalidGoals(getToleranceHeuristic(), _collision_checker, _traverse_unknown);
-
-  // print goals coordinates for debug
-  std::cout << "Goals coordinates: " << std::endl;
-  for (const auto & goal : _goal_manager.getGoalsCoordinates()) {
-    std::cout << "Goal: (" << goal.x << ", " << goal.y << ")" << std::endl;
-  }
-  // print goals and if they are valid
-  // std::cout << "Goals state: " << std::endl;
-  // for (const auto & goal_state : _goal_manager.getGoalsState()) {
-  //   std::cout << "Goal: (" << goal_state.goal->pose.x << ", "
-  //             << goal_state.goal->pose.y << ", "
-  //             << goal_state.goal->pose.theta << ") "
-  //             << "Valid: " << goal_state.is_valid << std::endl;
-  // }
-
-  // // compare if goal coordinates are the same as goal state coordinates
-  // const auto & goals_coordinates = _goal_manager.getGoalsCoordinates();
-  // const auto & goals_set = _goal_manager.getGoalsSet();
-  // if (goals_coordinates.size() != goals_set.size()) {
-  //   throw std::runtime_error("Goals coordinates and goals set size mismatch.");
-  // }
-
   // Check if ending point is valid
   if (_goal_manager.getGoalsSet().empty()) {
     throw nav2_core::GoalOccupied("Goal was in lethal cost");

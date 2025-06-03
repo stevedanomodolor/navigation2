@@ -54,6 +54,7 @@ public:
   : _goals_set(NodeSet()),
     _goals_state(GoalStateVector()),
     _goals_coordinate(CoordinateVector())
+    ,_ref_goal_coord(Coordinates())
   {
   }
 
@@ -81,15 +82,6 @@ public:
   {
     clear();
     _goals_state = goals_state;
-
-    // print all goal ointer addresses
-    std::cout << "Goals addresses: " << std::endl;
-    for (const auto & goal_state : _goals_state) {
-      std::cout << "Goal address: " << goal_state.goal << std::endl;
-      
-    }
-
-    // print all goal poin
   }
 
   /**
@@ -187,10 +179,36 @@ public:
     return _goals_coordinate;
   }
 
+  /**
+   * @brief Set the primary goal coordinate
+   * @param coord Coordinates to set as primary goal
+   */
+  inline void setRefGoalCoordinates(const Coordinates & coord)
+  {
+    _ref_goal_coord = coord;
+  }
+
+  /**
+   * @brief Checks whether the primary goal coordinate has changed.
+   * @param coord Coordinates to compare with the current primary goal coordinate.
+   * @return true if the primary goal coordinate has changed, false otherwise.
+   */
+  inline bool hasGoalChanged(const Coordinates & coord)
+  {
+    /**
+     * Note: This function checks if the goal has changed. This has to be done with 
+     * the coordinates not the Node pointer because the Node pointer
+     * can be reused for different goals, but the coordinates will always
+     * be unique for each goal.
+     */
+    return _ref_goal_coord != coord;
+  }
+
 protected:
   NodeSet _goals_set;
   GoalStateVector _goals_state;
   CoordinateVector _goals_coordinate;
+  Coordinates _ref_goal_coord;
 };
 
 }  // namespace nav2_smac_planner
