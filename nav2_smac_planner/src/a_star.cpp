@@ -298,9 +298,6 @@ void AStarAlgorithm<NodeT>::setGoal(
       _collision_checker->getCostmapROS(), _start->pose.x, _start->pose.y, mx, my);
   }
   
-
-  // // compare the input goal with goal state 
-  // if(mx !=
   _goal_manager.setGoalStates(goals_state);
   _goal_manager.setRefGoalCoordinates(ref_goal_coord);
 }
@@ -348,29 +345,6 @@ bool AStarAlgorithm<NodeT>::createPath(
   NodeVector coarse_check_goals, fine_check_goals;
   _goal_manager.prepareGoalsForAnalyticExpansion(coarse_check_goals, fine_check_goals,
     _coarse_search_resolution);
-
-  // print all indexes for all goals for debug
-  // std::cout << "Goals indexes: " << std::endl;
-  // for (const auto & goal : coarse_check_goals) {
-  //   std::cout << "Goal index: " << goal->getIndex() << std::endl;
-  // }
-  // for (const auto & goal : fine_check_goals) {
-  //   std::cout << "Fine goal index: " << goal->getIndex() << std::endl;
-  // }
-  // print all goals coordinates for debug
-  // std::cout << "Goals coordinates: " << std::endl;
-  // for (const auto & goal : _goal_manager.getGoalsCoordinates()) {
-  //   std::cout << "Goal coordinates: (" << goal.x << ", " << goal.y << ", " << goal.theta << ")"
-  //             << std::endl;
-  // }
-  // print all goals state for debug
-  // std::cout << "Goals state: " << std::endl;
-  // for (const auto & goal_state : _goal_manager.getGoalsState()) {
-  //   std::cout << "Goal state: (" << goal_state.goal->pose.x << ", "
-  //             << goal_state.goal->pose.y << ", "
-  //             << goal_state.goal->pose.theta << ") "
-  //             << "Valid: " << goal_state.is_valid << std::endl;
-  // }
 
   // 0) Add starting point to the open set
   addNode(0.0, getStart());
